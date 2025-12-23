@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WS Lawn Care - Financial Performance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        :root {
+            --primary-green: #2d5016;
+            --light-green: #4a7c2c;
+            --accent-gold: #d4af37;
+            --bg-dark: #2c3e50;
+            --bg-light: #ecf0f1;
+            --bg-white: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --border-color: #bdc3c7;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #3498db;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #34495e 100%);
+            color: white;
+            padding: 20px 40px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo-title {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .title-section h1 {
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .title-section p {
+            font-size: 0.95em;
+            opacity: 0.85;
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-settings {
+            background: #7f8c8d;
+            color: white;
+        }
+        
+        .btn-refresh {
+            background: var(--accent-gold);
+            color: var(--bg-dark);
+        }
+        
+        .btn-pdf {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .connection-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .connection-badge.live {
+            background: rgba(39, 174, 96, 0.2);
+            color: var(--success);
+        }
+        
+        .connection-badge.demo {
+            background: rgba(243, 156, 18, 0.2);
+            color: var(--warning);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 40px;
+        }
+        
+        .control-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .control-item label {
+            display: block;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .control-item select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .kpi-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kpi-label {
+            font-size: 0.9em;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .kpi-circle {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+        
+        .kpi-circle svg {
+            transform: rotate(-90deg);
+        }
+        
+        .kpi-circle-bg {
+            fill: none;
+            stroke: var(--bg-light);
+            stroke-width: 10;
+        }
+        
+        .kpi-circle-progress {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.5s ease;
+        }
+        
+        .kpi-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .kpi-subtext {
+            font-size: 0.85em;
+            color: var(--text-light);
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .income-statement {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .income-statement h3 {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        
+        .statement-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--bg-light);
+        }
+        
+        .statement-row.header {
+            font-weight: 700;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--text-dark);
+        }
+        
+        .statement-row.total {
+            font-weight: 700;
+            border-top: 2px solid var(--text-dark);
+            border-bottom: none;
+            margin-top: 10px;
+        }
+        
+        .statement-label {
+            color: var(--text-light);
+        }
+        
+        .statement-value {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .charts-section {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .chart-subtitle {
+            font-size: 0.85em;
+            color: var(--text-light);
+        }
+        
+        .chart-grid-lower {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .data-table-section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: var(--bg-dark);
+            color: white;
+        }
+        
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--bg-light);
+            font-size: 0.9em;
+        }
+        
+        tbody tr:hover {
+            background: rgba(52, 152, 219, 0.05);
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .badge-fixed {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger);
+        }
+        
+        .badge-variable {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning);
+        }
+        
+        .badge-needs-review {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--info);
+        }
+        
+        .progress-bar-cell {
+            min-width: 100px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-light);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--light-green), var(--primary-green));
+            transition: width 0.3s ease;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header h2 {
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-light);
+        }
+        
+        .spinner {
+            border: 4px solid var(--bg-light);
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .faith-footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-light);
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-grid-lower {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Dashboard Settings</h2>
+                <p>Configure your Tiller HQ connection and preferences</p>
+            </div>
+            
+            <div class="form-group">
+                <label>Data Source</label>
+                <select id="dataSource" onchange="toggleApiFields()">
+                    <option value="sample">Sample Data (Demo Mode)</option>
+                    <option value="live">Live Data (Tiller HQ)</option>
+                </select>
+            </div>
+            
+            <div id="apiFields" style="display: none;">
+                <div class="form-group">
+                    <label>Google API Key</label>
+                    <input type="text" id="apiKey" placeholder="AIzaSy...">
+                    <small style="color: var(--text-light);">From Google Cloud Console</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Spreadsheet ID</label>
+                    <input type="text" id="spreadsheetId" value="1fFbsuDFXu_W4MK234vNwM-WsEHkcDp6N1Tn_ZRe_J1I">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Budget Configuration (JSON)</label>
+                <textarea id="budgetConfig" rows="8" placeholder='{"Fuel": 500, "Subscriptions": 400}'></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button class="btn" style="background: var(--text-light); color: white;" onclick="closeSettings()">Cancel</button>
+                <button class="btn btn-refresh" onclick="saveSettings()">💾 Save & Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="logo-title">
+                <div class="logo-container">
+                    <img src="Transparent_Logo_V2.png" alt="WS Lawn Care" id="companyLogo">
+                </div>
+                <div class="title-section">
+                    <h1>Financial Performance KPI Dashboard</h1>
+                    <p>WS Lawn Care Services, LLC - "You grow it, we mow it!"</p>
+                </div>
+            </div>
+            <div class="header-controls">
+                <span id="connectionStatus" class="connection-badge demo">⚪ Demo Mode</span>
+                <button class="btn btn-settings" onclick="openSettings()">⚙️ Settings</button>
+                <button class="btn btn-refresh" onclick="loadData()">🔄 Refresh</button>
+                <button class="btn btn-pdf" onclick="exportPDF()">📄 PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container" id="dashboard">
+        
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <div class="control-item">
+                <label>📊 View Type</label>
+                <select id="viewType" onchange="updateDashboard()">
+                    <option value="yearly">Yearly</option>
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="weekly">Weekly</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label>📅 Date Range</label>
+                <select id="dateRange" onchange="updateDashboard()">
+                    <option value="2025" selected>2025</option>
+                    <option value="2024">2024</option>
+                    <option value="all">All Time</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label>📈 Comparison</label>
+                <select id="compareMode" onchange="updateDashboard()">
+                    <option value="actual">Actual Only</option>
+                    <option value="budget">Budget vs Actual</option>
+                    <option value="variance">Show Variance</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <p>Loading financial data...</p>
+        </div>
+
+        <div id="dashboardContent" style="display: none;">
+            
+            <!-- KPI Circles -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Net Profit Margin</div>
+                    <div class="kpi-circle">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="kpi-circle-bg" cx="60" cy="60" r="52"></circle>
+                            <circle class="kpi-circle-progress" cx="60" cy="60" r="52" 
+                                    stroke="var(--success)" 
+                                    id="profitMarginCircle"
+                                    stroke-dasharray="0 327"></circle>
+                        </svg>
+                        <div class="kpi-value" id="profitMarginPct">0%</div>
+                    </div>
+                    <div class="kpi-subtext" id="profitMarginValue">$0</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Burn Rate</div>
+                    <div class="kpi-circle">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="kpi-circle-bg" cx="60" cy="60" r="52"></circle>
+                            <circle class="kpi-circle-progress" cx="60" cy="60" r="52" 
+                                    stroke="var(--warning)" 
+                                    id="burnRateCircle"
+                                    stroke-dasharray="0 327"></circle>
+                        </svg>
+                        <div class="kpi-value" id="burnRatePct">0%</div>
+                    </div>
+                    <div class="kpi-subtext">Monthly Expenses</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Revenue Growth</div>
+                    <div class="kpi-circle">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="kpi-circle-bg" cx="60" cy="60" r="52"></circle>
+                            <circle class="kpi-circle-progress" cx="60" cy="60" r="52" 
+                                    stroke="var(--info)" 
+                                    id="revenueGrowthCircle"
+                                    stroke-dasharray="0 327"></circle>
+                        </svg>
+                        <div class="kpi-value" id="revenueGrowthPct">+0%</div>
+                    </div>
+                    <div class="kpi-subtext">YoY Growth</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Gross Profit Margin</div>
+                    <div class="kpi-circle">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="kpi-circle-bg" cx="60" cy="60" r="52"></circle>
+                            <circle class="kpi-circle-progress" cx="60" cy="60" r="52" 
+                                    stroke="var(--success)" 
+                                    id="grossMarginCircle"
+                                    stroke-dasharray="0 327"></circle>
+                        </svg>
+                        <div class="kpi-value" id="grossMarginPct">0%</div>
+                    </div>
+                    <div class="kpi-subtext" id="grossMarginValue">$0</div>
+                </div>
+            </div>
+
+            <!-- Main Grid: Income Statement + Charts -->
+            <div class="main-grid">
+                <!-- Income Statement -->
+                <div class="income-statement">
+                    <h3>Income Statement</h3>
+                    <div class="statement-row">
+                        <span class="statement-label">Revenue</span>
+                        <span class="statement-value" id="stmtRevenue">$0</span>
+                    </div>
+                    <div class="statement-row">
+                        <span class="statement-label">Cost of Sales</span>
+                        <span class="statement-value" id="stmtCogs">$0</span>
+                    </div>
+                    <div class="statement-row total">
+                        <span class="statement-label">Gross Profit</span>
+                        <span class="statement-value" id="stmtGrossProfit">$0</span>
+                    </div>
+                    <div class="statement-row">
+                        <span class="statement-label">Operating Expenses</span>
+                        <span class="statement-value" id="stmtOpex">$0</span>
+                    </div>
+                    <div class="statement-row">
+                        <span class="statement-label">&nbsp;&nbsp;Sales</span>
+                        <span class="statement-value" id="stmtSales">$0</span>
+                    </div>
+                    <div class="statement-row">
+                        <span class="statement-label">&nbsp;&nbsp;Marketing</span>
+                        <span class="statement-value" id="stmtMarketing">$0</span>
+                    </div>
+                    <div class="statement-row">
+                        <span class="statement-label">&nbsp;&nbsp;General & Admin</span>
+                        <span class="statement-value" id="stmtAdmin">$0</span>
+                    </div>
+                    <div class="statement-row total">
+                        <span class="statement-label">Operating Profit</span>
+                        <span class="statement-value" id="stmtOpProfit">$0</span>
+                    </div>
+                    <div class="statement-row">
+                        <span class="statement-label">Other Income/Expense</span>
+                        <span class="statement-value" id="stmtOther">$0</span>
+                    </div>
+                    <div class="statement-row total">
+                        <span class="statement-label">Net Profit</span>
+                        <span class="statement-value" id="stmtNetProfit">$0</span>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div>
+                                <div class="chart-title">Revenue & Expenses Trend</div>
+                                <div class="chart-subtitle">Month-to-Month YTD</div>
+                            </div>
+                        </div>
+                        <canvas id="trendChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lower Chart Grid -->
+            <div class="chart-grid-lower">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Cost Structure</div>
+                    </div>
+                    <canvas id="costTypeChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Expense Breakdown</div>
+                    </div>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Budget Comparison -->
+            <div class="chart-card" style="margin-bottom: 30px;">
+                <div class="chart-header">
+                    <div class="chart-title">Budget vs Actual Analysis</div>
+                </div>
+                <canvas id="budgetChart" height="100"></canvas>
+            </div>
+
+            <!-- Detailed Category Table -->
+            <div class="data-table-section">
+                <h3 style="margin-bottom: 20px;">Category Details & Budget Tracking</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Cost Type</th>
+                                <th>Actual</th>
+                                <th>Budget</th>
+                                <th>Variance</th>
+                                <th>% of Total</th>
+                                <th>Needs Review</th>
+                                <th>Last Checked</th>
+                                <th>Balance</th>
+                                <th>Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="faith-footer">
+            <p>✝️ "Jesus First Before Profits" | "Commitment Without Compromise" ✝️</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        let config = {
+            dataSource: 'sample',
+            apiKey: '',
+            spreadsheetId: '1fFbsuDFXu_W4MK234vNwM-WsEHkcDp6N1Tn_ZRe_J1I',
+            budgets: {}
+        };
+        
+        let transactions = [];
+        let categorization = {};
+        let charts = {};
+        let gapiLoaded = false;
+        
+        function loadConfig() {
+            const saved = localStorage.getItem('wsLawnCareConfig');
+            if (saved) {
+                config = JSON.parse(saved);
+                updateConnectionStatus();
+            }
+        }
+        
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+            document.getElementById('dataSource').value = config.dataSource;
+            document.getElementById('apiKey').value = config.apiKey;
+            document.getElementById('spreadsheetId').value = config.spreadsheetId;
+            document.getElementById('budgetConfig').value = JSON.stringify(config.budgets, null, 2);
+            toggleApiFields();
+        }
+        
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+        
+        function toggleApiFields() {
+            const source = document.getElementById('dataSource').value;
+            document.getElementById('apiFields').style.display = source === 'live' ? 'block' : 'none';
+        }
+        
+        function saveSettings() {
+            config.dataSource = document.getElementById('dataSource').value;
+            config.apiKey = document.getElementById('apiKey').value;
+            config.spreadsheetId = document.getElementById('spreadsheetId').value;
+            
+            try {
+                const budgetText = document.getElementById('budgetConfig').value;
+                config.budgets = budgetText ? JSON.parse(budgetText) : {};
+            } catch (e) {
+                config.budgets = {};
+            }
+            
+            localStorage.setItem('wsLawnCareConfig', JSON.stringify(config));
+            updateConnectionStatus();
+            closeSettings();
+            loadData();
+        }
+        
+        function updateConnectionStatus() {
+            const statusEl = document.getElementById('connectionStatus');
+            if (config.dataSource === 'live' && config.apiKey) {
+                statusEl.className = 'connection-badge live';
+                statusEl.textContent = '🟢 Live Data';
+            } else {
+                statusEl.className = 'connection-badge demo';
+                statusEl.textContent = '⚪ Demo Mode';
+            }
+        }
+        
+        function loadGoogleAPI() {
+            return new Promise((resolve, reject) => {
+                if (typeof gapi !== 'undefined') {
+                    gapi.load('client', () => {
+                        gapiLoaded = true;
+                        resolve();
+                    });
+                } else {
+                    reject(new Error('Google API not loaded'));
+                }
+            });
+        }
+        
+        async function loadData() {
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('dashboardContent').style.display = 'none';
+            
+            try {
+                if (config.dataSource === 'live' && config.apiKey) {
+                    await loadLiveData();
+                } else {
+                    await loadSampleData();
+                }
+                
+                updateDashboard();
+                
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loadingState').innerHTML = `
+                    <p style="color: var(--danger);">Error: ${error.message}</p>
+                    <button class="btn btn-refresh" onclick="openSettings()">Open Settings</button>
+                `;
+            }
+        }
+        
+        async function loadLiveData() {
+            if (!gapiLoaded) {
+                await loadGoogleAPI();
+            }
+            
+            await gapi.client.init({
+                apiKey: config.apiKey,
+                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+            });
+            
+            const transResponse = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: config.spreadsheetId,
+                range: 'Transactions!A:R'
+            });
+            
+            const transRows = transResponse.result.values;
+            if (!transRows || transRows.length === 0) {
+                throw new Error('No data in Transactions sheet');
+            }
+            
+            transactions = [];
+            for (let i = 1; i < transRows.length; i++) {
+                const row = transRows[i];
+                transactions.push({
+                    date: row[0] || '',
+                    description: row[1] || '',
+                    category: row[2] || '',
+                    amount: parseAmount(row[3]),
+                    account: row[4] || '',
+                    note: row[6] || '',
+                    jobName: row[7] || '',
+                    month: row[9] || '',
+                    week: row[10] || ''
+                });
+            }
+            
+            const catResponse = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: config.spreadsheetId,
+                range: 'fixed/variable!A:H'
+            });
+            
+            const catRows = catResponse.result.values;
+            if (catRows) {
+                categorization = {};
+                for (let i = 1; i < catRows.length; i++) {
+                    const row = catRows[i];
+                    if (row[0]) {
+                        categorization[row[0]] = {
+                            group: row[1] || 'Unknown',
+                            type: row[2] || 'Expense',
+                            costType: row[3] || 'Unknown',
+                            needsCategorizing: row[5] || '0',
+                            lastChecked: row[6] || '',
+                            balance: row[7] || ''
+                        };
+                    }
+                }
+            }
+        }
+        
+        async function loadSampleData() {
+            transactions = [
+                {date: '12/23/2025', category: 'Meeting Expense (meals)', amount: -31.43, month: '12/1/25', week: '12/21/25'},
+                {date: '12/22/2025', category: 'Job Cost', amount: -116.91, month: '12/1/25', week: '12/21/25'},
+                {date: '12/22/2025', category: 'Equipment Purchase', amount: -159.95, month: '12/1/25', week: '12/21/25'},
+                {date: '12/22/2025', category: 'Subscriptions', amount: -6.99, month: '12/1/25', week: '12/21/25'},
+                {date: '12/22/2025', category: 'Job Cost', amount: -500.00, month: '12/1/25', week: '12/21/25'},
+                {date: '12/19/2025', category: 'Sales', amount: 245.69, month: '12/1/25', week: '12/14/25'},
+                {date: '12/18/2025', category: 'Subscriptions', amount: -368.16, month: '12/1/25', week: '12/14/25'},
+                {date: '11/15/2025', category: 'Sales', amount: 450.00, month: '11/1/25', week: '11/10/25'},
+                {date: '11/10/2025', category: 'Fuel', amount: -75.50, month: '11/1/25', week: '11/10/25'},
+                {date: '10/20/2025', category: 'Sales', amount: 380.25, month: '10/1/25', week: '10/20/25'},
+            ];
+            
+            categorization = {
+                'Subscriptions': {group: 'Backend Cost', type: 'Expense', costType: 'Fixed', needsCategorizing: '0', lastChecked: 'today', balance: '$4,532'},
+                'Fuel': {group: 'Operation Cost', type: 'Expense', costType: 'Variable', needsCategorizing: '0', lastChecked: '12/20/25', balance: '$1,200'},
+                'Equipment Purchase': {group: 'Operation Cost', type: 'Expense', costType: 'Variable', needsCategorizing: '0', lastChecked: '12/15/25', balance: '$3,450'},
+                'Meeting Expense (meals)': {group: 'Non Operation Cost', type: 'Expense', costType: 'Variable', needsCategorizing: '0', lastChecked: 'today', balance: '$500'},
+                'Sales': {group: 'Revenue', type: 'Income', costType: 'Variable', needsCategorizing: '0', lastChecked: 'today', balance: '$15,000'},
+                'Job Cost': {group: 'Operation Cost', type: 'Expense', costType: 'Variable', needsCategorizing: '1', lastChecked: '11/30/25', balance: '$8,900'},
+            };
+            
+            await new Promise(resolve => setTimeout(resolve, 800));
+        }
+        
+        function parseAmount(amountStr) {
+            if (!amountStr) return 0;
+            const cleanStr = amountStr.toString().replace(/[$,]/g, '');
+            return parseFloat(cleanStr) || 0;
+        }
+        
+        function updateDashboard() {
+            const viewType = document.getElementById('viewType').value;
+            const dateRange = document.getElementById('dateRange').value;
+            const compareMode = document.getElementById('compareMode').value;
+            
+            const filteredData = filterDataByRange(transactions, dateRange);
+            const aggregatedData = aggregateData(filteredData, viewType);
+            
+            updateKPIs(filteredData);
+            updateIncomeStatement(filteredData);
+            updateTrendChart(aggregatedData);
+            updateCostChart(filteredData);
+            updateCategoryChart(filteredData);
+            updateBudgetChart(filteredData, compareMode);
+            updateDetailTable(filteredData, compareMode);
+        }
+        
+        function filterDataByRange(data, range) {
+            if (range === 'all') return data;
+            
+            return data.filter(t => {
+                if (!t.date) return false;
+                
+                let year = null;
+                if (t.date.includes('/')) {
+                    const parts = t.date.split('/');
+                    if (parts.length === 3) {
+                        year = parts[2];
+                        if (year.length === 2) year = '20' + year;
+                    }
+                } else if (t.date.includes('-')) {
+                    year = t.date.substring(0, 4);
+                } else if (t.date.length >= 4) {
+                    year = t.date.substring(0, 4);
+                }
+                
+                return year === range;
+            });
+        }
+        
+        function aggregateData(data, viewType) {
+            const grouped = {};
+            
+            data.forEach(t => {
+                let key;
+                let year, month;
+                
+                if (!t.date) return;
+                
+                if (t.date.includes('/')) {
+                    const parts = t.date.split('/');
+                    if (parts.length === 3) {
+                        month = parts[0].padStart(2, '0');
+                        year = parts[2];
+                        if (year.length === 2) year = '20' + year;
+                    }
+                } else if (t.date.includes('-')) {
+                    year = t.date.substring(0, 4);
+                    month = t.date.substring(5, 7);
+                } else {
+                    year = t.date.substring(0, 4);
+                    month = '01';
+                }
+                
+                if (viewType === 'yearly') {
+                    key = year;
+                } else if (viewType === 'monthly') {
+                    key = `${year}-${month}`;
+                } else {
+                    key = t.week || `${year}-${month}`;
+                }
+                
+                if (!grouped[key]) {
+                    grouped[key] = {revenue: 0, expenses: 0};
+                }
+                
+                if (t.amount > 0) {
+                    grouped[key].revenue += t.amount;
+                } else {
+                    grouped[key].expenses += Math.abs(t.amount);
+                }
+            });
+            
+            return grouped;
+        }
+        
+        function updateKPIs(data) {
+            const revenue = data.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+            const expenses = data.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const profit = revenue - expenses;
+            const margin = revenue > 0 ? (profit / revenue * 100) : 0;
+            
+            // Net Profit Margin
+            setCircleProgress('profitMarginCircle', margin);
+            document.getElementById('profitMarginPct').textContent = margin.toFixed(0) + '%';
+            document.getElementById('profitMarginValue').textContent = '$' + profit.toLocaleString();
+            
+            // Burn Rate (expenses as % of revenue)
+            const burnRate = revenue > 0 ? (expenses / revenue * 100) : 0;
+            setCircleProgress('burnRateCircle', burnRate);
+            document.getElementById('burnRatePct').textContent = burnRate.toFixed(0) + '%';
+            
+            // Revenue Growth (sample)
+            setCircleProgress('revenueGrowthCircle', 15);
+            document.getElementById('revenueGrowthPct').textContent = '+15%';
+            
+            // Gross Margin
+            setCircleProgress('grossMarginCircle', margin);
+            document.getElementById('grossMarginPct').textContent = margin.toFixed(0) + '%';
+            document.getElementById('grossMarginValue').textContent = '$' + profit.toLocaleString();
+        }
+        
+        function setCircleProgress(id, percent) {
+            const circle = document.getElementById(id);
+            const circumference = 2 * Math.PI * 52;
+            const offset = circumference - (percent / 100 * circumference);
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = offset;
+        }
+        
+        function updateIncomeStatement(data) {
+            const revenue = data.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+            const expenses = data.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            
+            const cogs = data.filter(t => t.amount < 0 && t.category === 'Job Cost').reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const grossProfit = revenue - cogs;
+            
+            const opex = expenses - cogs;
+            const opProfit = grossProfit - opex;
+            
+            document.getElementById('stmtRevenue').textContent = '$' + revenue.toLocaleString();
+            document.getElementById('stmtCogs').textContent = '$' + cogs.toLocaleString();
+            document.getElementById('stmtGrossProfit').textContent = '$' + grossProfit.toLocaleString();
+            document.getElementById('stmtOpex').textContent = '$' + opex.toLocaleString();
+            document.getElementById('stmtSales').textContent = '$0';
+            document.getElementById('stmtMarketing').textContent = '$0';
+            document.getElementById('stmtAdmin').textContent = '$' + opex.toLocaleString();
+            document.getElementById('stmtOpProfit').textContent = '$' + opProfit.toLocaleString();
+            document.getElementById('stmtOther').textContent = '$0';
+            document.getElementById('stmtNetProfit').textContent = '$' + opProfit.toLocaleString();
+        }
+        
+        function updateTrendChart(data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (charts.trendChart) charts.trendChart.destroy();
+            
+            const labels = Object.keys(data).sort();
+            const revenueData = labels.map(k => data[k].revenue);
+            const expenseData = labels.map(k => data[k].expenses);
+            
+            charts.trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: revenueData,
+                            borderColor: 'var(--success)',
+                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Expenses',
+                            data: expenseData,
+                            borderColor: 'var(--danger)',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {legend: {position: 'top'}},
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {callback: v => '$' + v.toLocaleString()}
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateCostChart(data) {
+            const ctx = document.getElementById('costTypeChart').getContext('2d');
+            if (charts.costTypeChart) charts.costTypeChart.destroy();
+            
+            let fixed = 0, variable = 0;
+            data.filter(t => t.amount < 0).forEach(t => {
+                const cat = categorization[t.category];
+                if (cat) {
+                    if (cat.costType === 'Fixed') fixed += Math.abs(t.amount);
+                    else if (cat.costType === 'Variable') variable += Math.abs(t.amount);
+                }
+            });
+            
+            charts.costTypeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fixed Costs', 'Variable Costs'],
+                    datasets: [{
+                        data: [fixed, variable],
+                        backgroundColor: ['var(--danger)', 'var(--warning)']
+                    }]
+                },
+                options: {responsive: true, plugins: {legend: {position: 'bottom'}}}
+            });
+        }
+        
+        function updateCategoryChart(data) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (charts.categoryChart) charts.categoryChart.destroy();
+            
+            const cats = {};
+            data.filter(t => t.amount < 0).forEach(t => {
+                cats[t.category] = (cats[t.category] || 0) + Math.abs(t.amount);
+            });
+            
+            charts.categoryChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(cats),
+                    datasets: [{
+                        data: Object.values(cats),
+                        backgroundColor: ['#2d5016', '#4a7c2c', '#d4af37', '#27ae60', '#f39c12', '#e74c3c', '#3498db']
+                    }]
+                },
+                options: {responsive: true, plugins: {legend: {position: 'right'}}}
+            });
+        }
+        
+        function updateBudgetChart(data, compareMode) {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            if (charts.budgetChart) charts.budgetChart.destroy();
+            
+            const cats = {};
+            data.filter(t => t.amount < 0).forEach(t => {
+                cats[t.category] = (cats[t.category] || 0) + Math.abs(t.amount);
+            });
+            
+            const labels = Object.keys(cats);
+            const actual = Object.values(cats);
+            const budget = actual.map((v, i) => config.budgets[labels[i]] || v * 1.2);
+            
+            const datasets = [{label: 'Actual', data: actual, backgroundColor: 'var(--primary-green)'}];
+            if (compareMode !== 'actual') {
+                datasets.push({label: 'Budget', data: budget, backgroundColor: 'var(--accent-gold)'});
+            }
+            
+            charts.budgetChart = new Chart(ctx, {
+                type: 'bar',
+                data: {labels, datasets},
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {legend: {position: 'top'}},
+                    scales: {y: {beginAtZero: true, ticks: {callback: v => '$' + v.toLocaleString()}}}
+                }
+            });
+        }
+        
+        function updateDetailTable(data, compareMode) {
+            const tbody = document.getElementById('detailTableBody');
+            tbody.innerHTML = '';
+            
+            const cats = {};
+            const totalExpenses = data.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            
+            data.filter(t => t.amount < 0).forEach(t => {
+                if (!cats[t.category]) cats[t.category] = {actual: 0, category: t.category};
+                cats[t.category].actual += Math.abs(t.amount);
+            });
+            
+            Object.values(cats).forEach(cat => {
+                const catInfo = categorization[cat.category] || {group: 'Unknown', type: 'Expense', costType: 'Unknown', needsCategorizing: '0', lastChecked: '', balance: ''};
+                const budget = config.budgets[cat.category] || cat.actual * 1.2;
+                const variance = budget - cat.actual;
+                const pct = ((cat.actual / totalExpenses) * 100).toFixed(1);
+                const progress = (cat.actual / budget * 100).toFixed(0);
+                
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${cat.category}</strong><br><small style="color: var(--text-light);">${catInfo.group}</small></td>
+                    <td><span class="status-badge">${catInfo.type}</span></td>
+                    <td><span class="status-badge badge-${catInfo.costType.toLowerCase()}">${catInfo.costType}</span></td>
+                    <td><strong>$${cat.actual.toLocaleString()}</strong></td>
+                    <td>$${budget.toLocaleString()}</td>
+                    <td style="color: ${variance > 0 ? 'var(--success)' : 'var(--danger)'}">$${variance.toLocaleString()}</td>
+                    <td><strong>${pct}%</strong></td>
+                    <td>${catInfo.needsCategorizing === '0' ? '✓' : '<span class="status-badge badge-needs-review">Review</span>'}</td>
+                    <td><small>${catInfo.lastChecked}</small></td>
+                    <td><strong>${catInfo.balance}</strong></td>
+                    <td class="progress-bar-cell">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
+                        </div>
+                        <small>${progress}%</small>
+                    </td>
+                `;
+            });
+        }
+        
+        function exportPDF() {
+            const element = document.getElementById('dashboard');
+            html2pdf().from(element).save('WS_Lawn_Care_Dashboard_' + new Date().toISOString().split('T')[0] + '.pdf');
+        }
+        
+        window.onload = function() {
+            loadConfig();
+            loadData();
+        };
+    </script>
+</body>
+</html>
