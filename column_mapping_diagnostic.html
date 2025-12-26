@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WS Lawn Care - Column Mapping Diagnostic</title>
+    <style>
+        :root {
+            --primary-green: #2d5016;
+            --light-green: #4a7c2c;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --info: #3498db;
+            --warning: #f39c12;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: #f5f5f5;
+            color: var(--text-dark);
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary-green);
+        }
+        
+        h1 {
+            color: var(--primary-green);
+            margin-bottom: 10px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid var(--danger);
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid var(--info);
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid var(--success);
+        }
+        
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: var(--primary-green);
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-green);
+        }
+        
+        .column-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .column-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--info);
+        }
+        
+        .column-card.important {
+            border-left-color: var(--danger);
+            background: #fff5f5;
+        }
+        
+        .column-letter {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 5px;
+        }
+        
+        .column-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .column-samples {
+            font-size: 0.9em;
+            color: var(--text-light);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .column-samples div {
+            padding: 3px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        
+        thead {
+            background: var(--primary-green);
+            color: white;
+        }
+        
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .excel-col {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .mapping-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        select {
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            font-size: 1em;
+        }
+        
+        .btn-primary {
+            background: var(--primary-green);
+        }
+        
+        .btn-primary:hover {
+            background: var(--light-green);
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--danger);
+        }
+        
+        .copy-btn {
+            background: var(--info);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        .copy-btn:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Column Mapping Diagnostic</h1>
+        <p style="color: var(--text-light); margin-top: 10px;">
+            This tool shows the ACTUAL column structure from your Google Sheet
+        </p>
+        
+        <div class="alert alert-danger">
+            <span style="font-size: 1.5em;">⚠️</span>
+            <div>
+                <strong>CRITICAL ISSUE IDENTIFIED:</strong><br>
+                The dashboard is reading <code>Amount</code> from the wrong column!<br>
+                Dashboard assumes: Column F | Your actual: Column D<br>
+                <strong>This explains the $11,188 vs $10,695.57 discrepancy!</strong>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingSection" class="loading">
+        <h2>Loading column structure from Google Sheets...</h2>
+        <p>Please wait...</p>
+    </div>
+
+    <div id="resultsSection" style="display: none;">
+        <!-- Column Headers Overview -->
+        <div class="section">
+            <div class="section-title">📋 Your Actual Column Structure</div>
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                <div>Below shows the EXACT column headers from your Google Sheet and sample data from the first 5 rows</div>
+            </div>
+            <div id="columnGrid" class="column-grid"></div>
+        </div>
+
+        <!-- Full Data Table -->
+        <div class="section">
+            <div class="section-title">📊 First 10 Rows of Data</div>
+            <div style="overflow-x: auto;">
+                <table id="dataTable"></table>
+            </div>
+        </div>
+
+        <!-- Correct Mapping Form -->
+        <div class="section">
+            <div class="section-title">✅ Define Correct Column Mapping</div>
+            <div class="alert alert-success">
+                <span>✓</span>
+                <div>
+                    Based on your spreadsheet, please confirm the correct columns below.<br>
+                    This will generate the corrected code for your dashboard.
+                </div>
+            </div>
+            
+            <div class="mapping-form">
+                <div class="form-row">
+                    <div class="form-label">Date Column:</div>
+                    <select id="dateColumn"></select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-label">Description Column:</div>
+                    <select id="descriptionColumn"></select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-label">Category Column:</div>
+                    <select id="categoryColumn"></select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-label">Amount Column:</div>
+                    <select id="amountColumn"></select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-label">Type Column:</div>
+                    <select id="typeColumn"></select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-label">Cost Type Column:</div>
+                    <select id="costTypeColumn"></select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-label">Bank Balance Column:</div>
+                    <select id="bankBalanceColumn"></select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-label">Need Categorizing:</div>
+                    <select id="needCategorizingColumn"></select>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button class="btn-success" onclick="generateCorrectedCode()">
+                        ✅ Generate Corrected getValue() Code
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generated Code -->
+        <div id="codeSection" class="section" style="display: none;">
+            <div class="section-title">💻 Corrected Code to Use in Dashboard</div>
+            <div class="alert alert-info">
+                <span>📋</span>
+                <div>
+                    Copy this corrected <code>getValue()</code> helper function and replace ALL instances in your dashboard where data is retrieved.
+                </div>
+            </div>
+            
+            <pre id="generatedCode" style="background: #2c3e50; color: #ecf0f1; padding: 20px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 0.9em;"></pre>
+            
+            <button class="copy-btn" onclick="copyCode()">📋 Copy Code to Clipboard</button>
+            
+            <div style="margin-top: 20px;">
+                <h3 style="color: var(--primary-green); margin-bottom: 10px;">Where to Update:</h3>
+                <ol style="line-height: 2; color: var(--text-dark);">
+                    <li>Find every line in the dashboard that reads data like: <code>row['Amount']</code></li>
+                    <li>Replace with: <code>getValue(row, 'Amount')</code> using the correct column name</li>
+                    <li>The <code>getValue()</code> function will automatically handle the column mapping</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SPREADSHEET_ID = '1fFbsuDFXu_W4MK234vNwM-WsEHkcDp6N1Tn_ZRe_J1I';
+        const TRANSACTIONS_GID = '1256593101';
+        
+        let sheetData = [];
+        let columnHeaders = [];
+
+        // Excel-style column letters
+        function getColumnLetter(index) {
+            let letter = '';
+            while (index >= 0) {
+                letter = String.fromCharCode(65 + (index % 26)) + letter;
+                index = Math.floor(index / 26) - 1;
+            }
+            return letter;
+        }
+
+        // Parse CSV properly
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            if (lines.length === 0) return [];
+            
+            function parseLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim());
+                return result;
+            }
+            
+            const headers = parseLine(lines[0]);
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseLine(lines[i]);
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                data.push(row);
+            }
+            
+            return { headers, data };
+        }
+
+        async function loadData() {
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${TRANSACTIONS_GID}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const text = await response.text();
+                const parsed = parseCSV(text);
+                
+                columnHeaders = parsed.headers;
+                sheetData = parsed.data;
+                
+                console.log('✅ Loaded', sheetData.length, 'rows');
+                console.log('✅ Found', columnHeaders.length, 'columns');
+                
+                displayResults();
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert(`Error loading data: ${error.message}`);
+            }
+        }
+
+        function displayResults() {
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            // Display column cards
+            let columnHtml = '';
+            columnHeaders.forEach((header, index) => {
+                const letter = getColumnLetter(index);
+                const samples = sheetData.slice(0, 5).map(row => row[header] || '(empty)');
+                
+                // Mark important columns
+                const isImportant = ['amount', 'category', 'type', 'cost type'].some(key => 
+                    header.toLowerCase().includes(key)
+                );
+                
+                columnHtml += `
+                    <div class="column-card ${isImportant ? 'important' : ''}">
+                        <div class="column-letter">Column ${letter}</div>
+                        <div class="column-name">${header || '(No Header)'}</div>
+                        <div class="column-samples">
+                            ${samples.map((s, i) => `<div>Row ${i + 1}: ${s.substring(0, 50)}${s.length > 50 ? '...' : ''}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('columnGrid').innerHTML = columnHtml;
+            
+            // Display full data table
+            let tableHtml = '<thead><tr>';
+            columnHeaders.forEach((header, index) => {
+                const letter = getColumnLetter(index);
+                tableHtml += `<th><span class="excel-col">${letter}</span> ${header}</th>`;
+            });
+            tableHtml += '</tr></thead><tbody>';
+            
+            sheetData.slice(0, 10).forEach((row, rowIndex) => {
+                tableHtml += '<tr>';
+                columnHeaders.forEach(header => {
+                    const value = row[header] || '';
+                    tableHtml += `<td>${value.substring(0, 100)}${value.length > 100 ? '...' : ''}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            tableHtml += '</tbody>';
+            
+            document.getElementById('dataTable').innerHTML = tableHtml;
+            
+            // Populate dropdowns
+            const dropdowns = [
+                'dateColumn', 'descriptionColumn', 'categoryColumn', 'amountColumn',
+                'typeColumn', 'costTypeColumn', 'bankBalanceColumn', 'needCategorizingColumn'
+            ];
+            
+            dropdowns.forEach(dropdownId => {
+                const select = document.getElementById(dropdownId);
+                select.innerHTML = '<option value="">-- Select Column --</option>';
+                columnHeaders.forEach((header, index) => {
+                    const letter = getColumnLetter(index);
+                    const option = document.createElement('option');
+                    option.value = header;
+                    option.textContent = `Column ${letter}: ${header}`;
+                    select.appendChild(option);
+                });
+            });
+            
+            // Try to auto-detect columns
+            autoDetectColumns();
+        }
+
+        function autoDetectColumns() {
+            const mapping = {
+                dateColumn: ['date', 'transaction date'],
+                descriptionColumn: ['description', 'memo', 'details'],
+                categoryColumn: ['category'],
+                amountColumn: ['amount', 'total', 'value'],
+                typeColumn: ['type', 'transaction type'],
+                costTypeColumn: ['cost type', 'expense type'],
+                bankBalanceColumn: ['bank balance', 'balance', 'current balance'],
+                needCategorizingColumn: ['need categorizing', 'needs categorizing', 'uncategorized']
+            };
+            
+            Object.entries(mapping).forEach(([dropdownId, keywords]) => {
+                const select = document.getElementById(dropdownId);
+                const match = columnHeaders.find(header => 
+                    keywords.some(keyword => header.toLowerCase().includes(keyword))
+                );
+                if (match) {
+                    select.value = match;
+                }
+            });
+        }
+
+        function generateCorrectedCode() {
+            const mapping = {
+                Date: document.getElementById('dateColumn').value,
+                Description: document.getElementById('descriptionColumn').value,
+                Category: document.getElementById('categoryColumn').value,
+                Amount: document.getElementById('amountColumn').value,
+                Type: document.getElementById('typeColumn').value,
+                'Cost Type': document.getElementById('costTypeColumn').value,
+                'Bank Balance': document.getElementById('bankBalanceColumn').value,
+                'Need Categorizing': document.getElementById('needCategorizingColumn').value
+            };
+            
+            // Validate all fields selected
+            const missing = Object.entries(mapping).filter(([k, v]) => !v).map(([k]) => k);
+            if (missing.length > 0) {
+                alert(`Please select columns for: ${missing.join(', ')}`);
+                return;
+            }
+            
+            let code = `// ============================================
+// CORRECTED COLUMN MAPPING FOR YOUR GOOGLE SHEET
+// ============================================
+// Copy this entire section and replace the old getValue() function
+//
+// VERIFIED COLUMN STRUCTURE:
+`;
+            
+            Object.entries(mapping).forEach(([logicalName, actualColumn]) => {
+                const colIndex = columnHeaders.indexOf(actualColumn);
+                const colLetter = getColumnLetter(colIndex);
+                code += `//   ${logicalName.padEnd(20)} → Column ${colLetter}: "${actualColumn}"\n`;
+            });
+            
+            code += `
+
+// Column mapping object - defines which physical column corresponds to which logical field
+const COLUMN_MAP = {
+    'Date': '${mapping.Date}',
+    'Description': '${mapping.Description}',
+    'Category': '${mapping.Category}',
+    'Amount': '${mapping.Amount}',
+    'Type': '${mapping.Type}',
+    'Cost Type': '${mapping['Cost Type']}',
+    'Bank Balance': '${mapping['Bank Balance']}',
+    'Need Categorizing': '${mapping['Need Categorizing']}'
+};
+
+// Helper function to get values using the correct column mapping
+function getValue(row, logicalColumnName) {
+    const actualColumnName = COLUMN_MAP[logicalColumnName];
+    if (!actualColumnName) {
+        console.warn('⚠️ Unknown logical column:', logicalColumnName);
+        return '';
+    }
+    return row[actualColumnName] || '';
+}
+
+// ============================================
+// HOW TO USE IN YOUR DASHBOARD:
+// ============================================
+// Replace ALL instances like this:
+//
+// OLD (WRONG):
+//   const amount = row['Amount']
+//   const category = row['Category']
+//
+// NEW (CORRECT):
+//   const amount = getValue(row, 'Amount')
+//   const category = getValue(row, 'Category')
+//
+// This ensures the dashboard always reads from the correct columns!
+// ============================================
+`;
+            
+            document.getElementById('generatedCode').textContent = code;
+            document.getElementById('codeSection').style.display = 'block';
+            
+            // Scroll to code
+            document.getElementById('codeSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyCode() {
+            const code = document.getElementById('generatedCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ Code copied to clipboard! Paste it into your dashboard.');
+            });
+        }
+
+        // Load data on page load
+        loadData();
+    </script>
+</body>
+</html>
