@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WS Lawn Care - Ultimate Dashboard v2</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-green: #2d5016;
+            --light-green: #4a7c2c;
+            --bg-white: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --border-color: #bdc3c7;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #3498db;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: #f5f5f5;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 20px 40px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-bottom: 3px solid var(--primary-green);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .logo-section img { height: 80px; width: auto; }
+        
+        .title-section h1 {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: var(--primary-green);
+        }
+        
+        .title-section p {
+            font-size: 0.95em;
+            color: var(--light-green);
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .date-picker-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-label {
+            font-size: 0.85em;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            background: white;
+            color: var(--text-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        select:hover { border-color: var(--primary-green); }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary-green);
+            color: white;
+        }
+        
+        .btn-primary:hover { background: var(--light-green); }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary-green);
+            border: 2px solid var(--primary-green);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary-green);
+            color: white;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .alert-banner {
+            background: var(--danger);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .alert-banner.show { display: flex; }
+        .alert-banner.warning { background: var(--warning); }
+        .alert-banner.info { background: var(--info); }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-green);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .metric-card.alert-danger {
+            border-left-color: var(--danger);
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+        }
+        
+        .metric-card.alert-warning {
+            border-left-color: var(--warning);
+            background: linear-gradient(135deg, #fffbf0 0%, #fff3cd 100%);
+        }
+        
+        .info-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--info);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s;
+        }
+        
+        .info-button:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+        
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .metric-title {
+            font-size: 0.9em;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        .metric-icon { font-size: 1.2em; }
+        
+        .metric-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .metric-subtitle {
+            font-size: 0.85em;
+            color: var(--text-light);
+        }
+        
+        .metric-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .badge-excellent { background: #d4edda; color: #155724; }
+        .badge-good { background: #d1ecf1; color: #0c5460; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        
+        .progress-tracker { margin-top: 20px; }
+        .progress-item { margin-bottom: 20px; }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .progress-label {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .progress-value { color: var(--text-light); }
+        
+        .progress-bar-container {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-bar.danger { background: linear-gradient(90deg, var(--danger), #c0392b); }
+        .progress-bar.warning { background: linear-gradient(90deg, var(--warning), #d68910); }
+        .progress-bar.success { background: linear-gradient(90deg, var(--success), #229954); }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        thead {
+            background: var(--primary-green);
+            color: white;
+        }
+        
+        th, td { padding: 15px; text-align: left; }
+        
+        th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+        
+        tbody tr { border-bottom: 1px solid var(--border-color); }
+        tbody tr:hover { background: #f8f9fa; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary-green);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .close-modal {
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-light);
+            background: none;
+            border: none;
+        }
+        
+        .close-modal:hover { color: var(--text-dark); }
+        
+        .explanation-content { line-height: 1.8; }
+        
+        .explanation-content h3 {
+            color: var(--primary-green);
+            margin: 20px 0 10px 0;
+        }
+        
+        .explanation-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .example-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid var(--info);
+        }
+        
+        @media print {
+            .dashboard-header, .btn, .modal { display: none !important; }
+        }
+        
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: 1fr; }
+            .date-picker-group { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <div id="alertBanner" class="alert-banner">
+        <div style="display:flex;align-items:center;gap:15px;">
+            <span>⚠️</span>
+            <div id="alertMessage"></div>
+        </div>
+        <button onclick="closeAlert()" style="background:none;border:none;color:white;font-size:1.5em;cursor:pointer;">&times;</button>
+    </div>
+
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="ws_lawn_care_logo.png" alt="WS Lawn Care" onerror="this.style.display='none'">
+                <div class="title-section">
+                    <h1>Ultimate Business Dashboard v2</h1>
+                    <p>"You grow it, we mow it!" - Restructured Data</p>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="date-picker-group">
+                    <div class="control-group">
+                        <span class="control-label">View:</span>
+                        <select id="viewType" onchange="changeViewType()">
+                            <option value="ytd">Year to Date 2025</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group" id="monthPicker" style="display: none;">
+                        <span class="control-label">Month:</span>
+                        <select id="monthSelect" onchange="filterAndDisplay()">
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group" id="yearPicker">
+                        <span class="control-label">Year:</span>
+                        <select id="yearSelect" onchange="filterAndDisplay()"></select>
+                    </div>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="openBalanceSheet()">📊 Balance Sheet</button>
+                <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Section 1: Financial Overview -->
+        <div class="section">
+            <div class="section-title">💰 Financial Overview</div>
+            <div class="metrics-grid" id="financialMetrics">
+                <div class="metric-card">
+                    <div class="metric-value">Loading...</div>
+                    <div class="metric-subtitle">Connecting to Google Sheets...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Cost Type Breakdown -->
+        <div class="section">
+            <div class="section-title">📊 Cost Type Breakdown</div>
+            <div class="metrics-grid" id="costTypeMetrics"></div>
+        </div>
+
+        <!-- Section 3: Operational Efficiency -->
+        <div class="section">
+            <div class="section-title">⚡ Operational Efficiency</div>
+            <div class="metrics-grid" id="efficiencyMetrics"></div>
+        </div>
+
+        <!-- Section 4: Revenue Trends -->
+        <div class="section">
+            <div class="section-title">📈 Revenue Trends</div>
+            <div class="chart-container">
+                <canvas id="revenueTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Section 5: Category Spending -->
+        <div class="section">
+            <div class="section-title">💳 Category Spending Trends</div>
+            <div id="lastUpdate" style="margin-bottom:15px;color:var(--text-light);"></div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Cost Type</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 6: Service Performance -->
+        <div class="section">
+            <div class="section-title">📊 Service Type Performance</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Client Count</th>
+                            <th>Avg Billable Hours</th>
+                            <th>Avg Budgeted Hours</th>
+                            <th>Efficiency %</th>
+                            <th>Total Jobs</th>
+                        </tr>
+                    </thead>
+                    <tbody id="serviceTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balance Sheet Modal -->
+    <div id="balanceSheetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>WS Lawn Care - Balance Sheet</span>
+                <button class="close-modal" onclick="closeBalanceSheet()">&times;</button>
+            </div>
+            <div id="balanceSheetContent"></div>
+            <div style="text-align:center;margin-top:20px;">
+                <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SPREADSHEET_ID = '1fFbsuDFXu_W4MK234vNwM-WsEHkcDp6N1Tn_ZRe_J1I';
+        const YEARLY_BUDGET_GID = '865052300';
+        const COST_ANALYSIS_GID = '792510277';
+        const TRANSACTIONS_GID = '1256593101';
+
+        // YTD Actuals from Yearly Budget
+        const YTD_INCOME_BUDGET = 154286;
+        const YTD_EXPENSES_BUDGET = 149284.26;
+
+        let allTransactionsData = [];
+        let allCostAnalysisData = [];
+        let transactionsData = [];
+        let costAnalysisData = [];
+        let revenueChart = null;
+        let currentView = 'ytd';
+
+        function initializePickers() {
+            const yearSelect = document.getElementById('yearSelect');
+            for (let year = 2020; year <= 2026; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === 2025) option.selected = true;
+                yearSelect.appendChild(option);
+            }
+            document.getElementById('monthSelect').value = 11;
+        }
+
+        function changeViewType() {
+            currentView = document.getElementById('viewType').value;
+            document.getElementById('monthPicker').style.display = currentView === 'monthly' ? 'flex' : 'none';
+            if (allTransactionsData.length > 0) {
+                filterAndDisplay();
+            }
+        }
+
+        async function fetchSheetData(sheetGid, sheetName) {
+            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${sheetGid}`;
+            console.log(`Fetching ${sheetName}...`);
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const text = await response.text();
+            const data = parseCSV(text);
+            console.log(`✅ ${sheetName}: ${data.length} rows`);
+            return data;
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            if (lines.length === 0) return [];
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                const row = {};
+                headers.forEach((header, index) => { row[header] = values[index] || ''; });
+                data.push(row);
+            }
+            return data;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatPercent(value) {
+            return `${value.toFixed(1)}%`;
+        }
+
+        function parseNumber(value) {
+            if (!value) return 0;
+            return parseFloat(value.replace(/[$,]/g, '')) || 0;
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return null;
+            let month = parseInt(parts[0]) - 1;
+            let day = parseInt(parts[1]);
+            let year = parseInt(parts[2]);
+            if (year < 100) year += 2000;
+            return new Date(year, month, day);
+        }
+
+        function showAlert(message, type = 'danger') {
+            const banner = document.getElementById('alertBanner');
+            banner.className = `alert-banner ${type} show`;
+            document.getElementById('alertMessage').innerHTML = message;
+        }
+
+        function closeAlert() {
+            document.getElementById('alertBanner').classList.remove('show');
+        }
+
+        function openBalanceSheet() {
+            generateBalanceSheet();
+            document.getElementById('balanceSheetModal').style.display = 'flex';
+        }
+
+        function closeBalanceSheet() {
+            document.getElementById('balanceSheetModal').style.display = 'none';
+        }
+
+        async function loadData() {
+            try {
+                console.log('🔄 Loading dashboard data...');
+                
+                [allTransactionsData, allCostAnalysisData] = await Promise.all([
+                    fetchSheetData(TRANSACTIONS_GID, 'Transactions'),
+                    fetchSheetData(COST_ANALYSIS_GID, 'Cost Analysis')
+                ]);
+
+                // DEBUG: Show what columns we actually have
+                console.log('==== TRANSACTIONS DEBUG ====');
+                console.log('Total rows:', allTransactionsData.length);
+                if (allTransactionsData.length > 0) {
+                    console.log('Column Headers:', Object.keys(allTransactionsData[0]));
+                    console.log('Row 1 (index 0 - header row):', allTransactionsData[0]);
+                    console.log('Row 2 (index 1 - first data):', allTransactionsData[1]);
+                    console.log('Row 3 (index 2):', allTransactionsData[2]);
+                }
+                
+                console.log('\n==== COST ANALYSIS DEBUG ====');
+                console.log('Total rows:', allCostAnalysisData.length);
+                if (allCostAnalysisData.length > 0) {
+                    const headers = Object.keys(allCostAnalysisData[0]);
+                    console.log('Column Headers (', headers.length, '):', headers);
+                    console.log('\nColumn Index Mapping:');
+                    headers.forEach((header, idx) => {
+                        console.log(`  ${idx}: "${header}"`);
+                    });
+                    console.log('\nFirst 3 rows:');
+                    allCostAnalysisData.slice(0, 3).forEach((row, idx) => {
+                        console.log(`Row ${idx}:`, {
+                            'Client Name': row['Client Name'],
+                            'Service': row['Service'],
+                            'Billable Hours': row['Billable Hours'],
+                            'Budgeted Hours': row['Budgeted Hours'],
+                            'Job Date': row['Job Date']
+                        });
+                    });
+                }
+
+                console.log('✨ Data loaded successfully');
+                filterAndDisplay();
+                showAlert('✅ Data loaded successfully! Check console (F12) for debug info.', 'info');
+                setTimeout(() => closeAlert(), 5000);
+                
+            } catch (error) {
+                console.error('❌ Load error:', error);
+                showAlert(`Error loading data: ${error.message}`, 'danger');
+            }
+        }
+        
+        function filterAndDisplay() {
+            if (!allTransactionsData || allTransactionsData.length === 0) {
+                console.log('Data not loaded yet, skipping filter');
+                return;
+            }
+            transactionsData = filterDataByDateRange(allTransactionsData);
+            costAnalysisData = filterDataByDateRange(allCostAnalysisData);
+            displayAllSections();
+        }
+        
+        function filterDataByDateRange(data) {
+            const view = document.getElementById('viewType').value;
+            
+            if (view === 'ytd') {
+                return data.filter(row => {
+                    // Try multiple date column names
+                    const date = parseDate(row['Date'] || row['Job Date'] || row['date'] || row['job date']);
+                    return date && date.getFullYear() === 2025;
+                });
+            } else if (view === 'monthly') {
+                const month = parseInt(document.getElementById('monthSelect').value);
+                const year = parseInt(document.getElementById('yearSelect').value);
+                return data.filter(row => {
+                    const date = parseDate(row['Date'] || row['Job Date'] || row['date'] || row['job date']);
+                    return date && date.getMonth() === month && date.getFullYear() === year;
+                });
+            } else if (view === 'yearly') {
+                const year = parseInt(document.getElementById('yearSelect').value);
+                return data.filter(row => {
+                    const date = parseDate(row['Date'] || row['Job Date'] || row['date'] || row['job date']);
+                    return date && date.getFullYear() === year;
+                });
+            }
+            return data;
+        }
+
+        function displayAllSections() {
+            displayFinancialOverview();
+            displayCostTypeBreakdown();
+            displayEfficiency();
+            displayRevenueChart();
+            displayCategorySpending();
+            displayServicePerformance();
+            document.getElementById('lastUpdate').textContent = `Last updated: ${new Date().toLocaleString()}`;
+        }
+
+        function displayFinancialOverview() {
+            const view = document.getElementById('viewType').value;
+            
+            // Calculate from Transactions: Type (Column J) = "Income" or "Expense"
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            let incomeCount = 0;
+            let expenseCount = 0;
+            
+            // DEBUG: Check bank balance
+            console.log('\n==== BANK BALANCE DEBUG ====');
+            console.log('Checking rows 0-5 for Bank Balance:');
+            for (let i = 0; i < Math.min(6, allTransactionsData.length); i++) {
+                console.log(`Row ${i}:`, {
+                    'Bank Balance': allTransactionsData[i]['Bank Balance'],
+                    'All keys': Object.keys(allTransactionsData[i])
+                });
+            }
+            
+            if (view === 'ytd') {
+                // Use YTD from Yearly Budget for accuracy
+                totalIncome = YTD_INCOME_BUDGET;
+                totalExpenses = YTD_EXPENSES_BUDGET;
+                
+                // Count transactions
+                console.log('\n==== TYPE FILTERING DEBUG ====');
+                console.log('First 10 transactions Type values:');
+                transactionsData.slice(0, 10).forEach((txn, i) => {
+                    console.log(`Row ${i}: Type="${txn['Type']}" (lowercase: "${(txn['Type'] || '').toLowerCase()}")`);
+                });
+                
+                transactionsData.forEach(txn => {
+                    const type = (txn['Type'] || '').toLowerCase();
+                    if (type === 'income') incomeCount++;
+                    if (type === 'expense') expenseCount++;
+                });
+                
+                console.log('Type counts:', { incomeCount, expenseCount, total: transactionsData.length });
+            } else {
+                // Calculate from filtered Transactions
+                transactionsData.forEach(txn => {
+                    const type = (txn['Type'] || '').toLowerCase();
+                    const amount = Math.abs(parseNumber(txn['Amount']));
+                    
+                    if (type === 'income') {
+                        totalIncome += amount;
+                        incomeCount++;
+                    } else if (type === 'expense') {
+                        totalExpenses += amount;
+                        expenseCount++;
+                    }
+                });
+            }
+            
+            // Get Bank Balance - scan all rows to find first non-empty value
+            let bankBalance = 0;
+            for (let i = 0; i < allTransactionsData.length; i++) {
+                const balance = parseNumber(allTransactionsData[i]['Bank Balance']);
+                if (balance !== 0) {
+                    bankBalance = balance;
+                    console.log(`Found Bank Balance at row ${i}:`, balance);
+                    break;
+                }
+            }
+            if (bankBalance === 0) {
+                console.log('WARNING: No non-zero Bank Balance found in any row');
+            }
+            
+            const netProfit = totalIncome - totalExpenses;
+            const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+            const alertClass = profitMargin < 10 ? 'alert-danger' : profitMargin < 15 ? 'alert-warning' : '';
+            
+            const viewLabel = view === 'ytd' ? 'YTD' : view === 'monthly' ? 'This Month' : 'This Year';
+            
+            const html = `
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Total Income ${viewLabel}</span>
+                        <span class="metric-icon">💰</span>
+                    </div>
+                    <div class="metric-value">${formatCurrency(totalIncome)}</div>
+                    <div class="metric-subtitle">${incomeCount} income transactions</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Total Expenses ${viewLabel}</span>
+                        <span class="metric-icon">💳</span>
+                    </div>
+                    <div class="metric-value">${formatCurrency(totalExpenses)}</div>
+                    <div class="metric-subtitle">${expenseCount} expense transactions</div>
+                </div>
+
+                <div class="metric-card ${alertClass}">
+                    <div class="metric-header">
+                        <span class="metric-title">Net Profit ${viewLabel}</span>
+                        <span class="metric-icon">💡</span>
+                    </div>
+                    <div class="metric-value">${formatCurrency(netProfit)}</div>
+                    <div class="metric-subtitle">Margin: ${formatPercent(profitMargin)}</div>
+                    <div class="metric-badge ${profitMargin >= 15 ? 'badge-good' : profitMargin >= 10 ? 'badge-warning' : 'badge-danger'}">
+                        ${profitMargin >= 15 ? '✅ Healthy' : profitMargin >= 10 ? '⚠️ Low' : '🚨 Critical'}
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Bank Balance</span>
+                        <span class="metric-icon">🏦</span>
+                    </div>
+                    <div class="metric-value">${formatCurrency(bankBalance)}</div>
+                    <div class="metric-subtitle">From Transactions N2</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Total Transactions</span>
+                        <span class="metric-icon">📋</span>
+                    </div>
+                    <div class="metric-value">${transactionsData.length}</div>
+                    <div class="metric-subtitle">In selected period</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Jobs Completed</span>
+                        <span class="metric-icon">📊</span>
+                    </div>
+                    <div class="metric-value">${costAnalysisData.length}</div>
+                    <div class="metric-subtitle">From Cost Analysis</div>
+                </div>
+            `;
+            
+            document.getElementById('financialMetrics').innerHTML = html;
+            
+            if (view === 'ytd' && profitMargin < 10) {
+                showAlert(`🚨 CRITICAL: ${formatPercent(profitMargin)} profit margin! Industry minimum is 10%.`, 'danger');
+            }
+        }
+
+        function displayCostTypeBreakdown() {
+            // Cost Type (Column K) = "Fixed" or "Variable"
+            let fixedCosts = 0;
+            let variableCosts = 0;
+            let fixedCount = 0;
+            let variableCount = 0;
+            let needsCategorizing = 0;
+            
+            // DEBUG: Log first few transactions to see data structure
+            console.log('\n==== COST TYPE BREAKDOWN DEBUG ====');
+            console.log('Total filtered transactions:', transactionsData.length);
+            console.log('First 10 filtered transactions:');
+            transactionsData.slice(0, 10).forEach((txn, i) => {
+                console.log(`Row ${i}:`, {
+                    'Type': `"${txn['Type']}"`,
+                    'Cost Type': `"${txn['Cost Type']}"`,
+                    'Amount': txn['Amount'],
+                    'Need Categorizing': txn['Need Categorizing'],
+                    'Category': txn['Category']
+                });
+            });
+            
+            transactionsData.forEach(txn => {
+                const costType = (txn['Cost Type'] || '').trim().toLowerCase();
+                const amount = Math.abs(parseNumber(txn['Amount']));
+                const type = (txn['Type'] || '').trim().toLowerCase();
+                const needsCat = parseNumber(txn['Need Categorizing'] || '0');
+                
+                // Sum all "Needs Categorizing" values
+                if (needsCat > 0) {
+                    needsCategorizing += needsCat;
+                    console.log('Found needs categorizing:', needsCat, 'Total now:', needsCategorizing);
+                }
+                
+                if (type === 'expense') {
+                    if (costType === 'fixed') {
+                        fixedCosts += amount;
+                        fixedCount++;
+                    } else if (costType === 'variable') {
+                        variableCosts += amount;
+                        variableCount++;
+                    }
+                }
+            });
+            
+            console.log('Cost Type Results:', {
+                fixedCosts, fixedCount,
+                variableCosts, variableCount,
+                needsCategorizing,
+                totalTransactions: transactionsData.length
+            });
+            
+            const totalCosts = fixedCosts + variableCosts;
+            const fixedPercent = totalCosts > 0 ? (fixedCosts / totalCosts) * 100 : 0;
+            const variablePercent = totalCosts > 0 ? (variableCosts / totalCosts) * 100 : 0;
+            
+            const html = `
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Fixed Costs</span>
+                        <span class="metric-icon">📌</span>
+                    </div>
+                    <div class="metric-value">${formatCurrency(fixedCosts)}</div>
+                    <div class="metric-subtitle">${fixedCount} transactions · ${formatPercent(fixedPercent)} of total</div>
+                    <div class="metric-badge ${fixedPercent <= 35 ? 'badge-excellent' : fixedPercent <= 45 ? 'badge-good' : 'badge-warning'}">
+                        ${fixedPercent <= 35 ? '🔥 Excellent' : fixedPercent <= 45 ? '✓ Good' : 'High'}
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Variable Costs</span>
+                        <span class="metric-icon">📊</span>
+                    </div>
+                    <div class="metric-value">${formatCurrency(variableCosts)}</div>
+                    <div class="metric-subtitle">${variableCount} transactions · ${formatPercent(variablePercent)} of total</div>
+                </div>
+
+                <div class="metric-card ${needsCategorizing > 5 ? 'alert-warning' : ''}">
+                    <div class="metric-header">
+                        <span class="metric-title">Needs Categorizing</span>
+                        <span class="metric-icon">⚠️</span>
+                    </div>
+                    <div class="metric-value">${needsCategorizing}</div>
+                    <div class="metric-subtitle">Uncategorized items</div>
+                    <div class="metric-badge ${needsCategorizing === 0 ? 'badge-excellent' : needsCategorizing <= 5 ? 'badge-good' : 'badge-warning'}">
+                        ${needsCategorizing === 0 ? '✓ All Clear' : needsCategorizing <= 5 ? 'Review Soon' : 'Action Needed'}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('costTypeMetrics').innerHTML = html;
+        }
+
+        function displayEfficiency() {
+            let totalBillable = 0;
+            let totalBudgeted = 0;
+            let jobCount = 0;
+
+            costAnalysisData.forEach(job => {
+                const billable = parseFloat(job['Billable Hours']) || 0;
+                const budgeted = parseFloat(job['Budgeted Hours']) || 0;
+                
+                if (billable > 0) {
+                    totalBillable += billable;
+                    totalBudgeted += budgeted;
+                    jobCount++;
+                }
+            });
+
+            const efficiencyRate = totalBudgeted > 0 ? (totalBillable / totalBudgeted) * 100 : 0;
+            const avgBillable = jobCount > 0 ? totalBillable / jobCount : 0;
+            const avgBudgeted = jobCount > 0 ? totalBudgeted / jobCount : 0;
+            
+            const html = `
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Efficiency Rate</span>
+                        <span class="metric-icon">⚡</span>
+                    </div>
+                    <div class="metric-value">${formatPercent(efficiencyRate)}</div>
+                    <div class="metric-subtitle">Billable vs Budgeted</div>
+                    <div class="metric-badge ${efficiencyRate >= 75 && efficiencyRate <= 100 ? 'badge-excellent' : efficiencyRate < 75 ? 'badge-warning' : 'badge-good'}">
+                        ${efficiencyRate >= 75 && efficiencyRate <= 100 ? '💎 Excellent' : efficiencyRate < 75 ? 'Below Target' : 'Over Budget'}
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Total Billable Hours</span>
+                        <span class="metric-icon">⏱️</span>
+                    </div>
+                    <div class="metric-value">${totalBillable.toFixed(0)}h</div>
+                    <div class="metric-subtitle">Across ${jobCount} jobs</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Avg Hours Per Job</span>
+                        <span class="metric-icon">📊</span>
+                    </div>
+                    <div class="metric-value">${avgBillable.toFixed(1)}h</div>
+                    <div class="metric-subtitle">Budgeted: ${avgBudgeted.toFixed(1)}h</div>
+                </div>
+            `;
+            
+            document.getElementById('efficiencyMetrics').innerHTML = html;
+        }
+
+        function displayRevenueChart() {
+            const monthlyRevenue = {};
+            
+            transactionsData.forEach(txn => {
+                const type = (txn['Type'] || '').toLowerCase();
+                if (type !== 'income') return;
+                
+                const date = txn['Date'];
+                if (!date) return;
+                
+                const parts = date.split('/');
+                if (parts.length !== 3) return;
+                
+                const month = parseInt(parts[0]);
+                const revenue = Math.abs(parseNumber(txn['Amount']));
+                
+                if (!monthlyRevenue[month]) monthlyRevenue[month] = 0;
+                monthlyRevenue[month] += revenue;
+            });
+
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const data = months.map((_, i) => monthlyRevenue[i + 1] || 0);
+
+            const ctx = document.getElementById('revenueTrendChart');
+            
+            if (revenueChart) revenueChart.destroy();
+            
+            const view = document.getElementById('viewType').value;
+            const chartLabel = view === 'ytd' ? 'Monthly Revenue 2025' : 
+                               view === 'yearly' ? `Monthly Revenue ${document.getElementById('yearSelect').value}` :
+                               'Revenue';
+            
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: chartLabel,
+                        data: data,
+                        borderColor: '#2d5016',
+                        backgroundColor: 'rgba(45, 80, 22, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `Revenue: ${formatCurrency(ctx.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => formatCurrency(value)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayCategorySpending() {
+            const categories = {};
+            
+            transactionsData.forEach(txn => {
+                const category = txn['Category'] || 'Uncategorized';
+                const type = txn['Type'] || 'Unknown';
+                const costType = txn['Cost Type'] || 'Unknown';
+                const amount = Math.abs(parseNumber(txn['Amount']));
+                
+                const key = `${category}-${costType}`;
+                if (!categories[key]) {
+                    categories[key] = { 
+                        category, 
+                        costType, 
+                        type, 
+                        amount: 0, 
+                        count: 0 
+                    };
+                }
+                categories[key].amount += amount;
+                categories[key].count += 1;
+            });
+            
+            const rows = Object.values(categories)
+                .sort((a, b) => b.amount - a.amount)
+                .map(data => {
+                    return `
+                        <tr>
+                            <td><strong>${data.category}</strong></td>
+                            <td>${data.costType}</td>
+                            <td>${data.type}</td>
+                            <td><strong>${formatCurrency(data.amount)}</strong></td>
+                            <td>${data.count}</td>
+                        </tr>
+                    `;
+                }).join('');
+            
+            document.getElementById('categoryTableBody').innerHTML = rows || '<tr><td colspan="5" style="text-align:center;">No category data available</td></tr>';
+        }
+
+        function displayServicePerformance() {
+            console.log('\n==== SERVICE PERFORMANCE DEBUG ====');
+            console.log('Cost Analysis rows:', costAnalysisData.length);
+            if (costAnalysisData.length > 0) {
+                console.log('First 3 jobs:', costAnalysisData.slice(0, 3).map(job => ({
+                    'Service': job['Service'],
+                    'Billable Hours': job['Billable Hours'],
+                    'Budgeted Hours': job['Budgeted Hours'],
+                    'Client Name': job['Client Name']
+                })));
+            }
+            
+            const services = {};
+            
+            costAnalysisData.forEach(job => {
+                const service = job['Service'] || 'Unknown';
+                const billable = parseFloat(job['Billable Hours']) || 0;
+                const budgeted = parseFloat(job['Budgeted Hours']) || 0;
+                const client = job['Client Name'] || '';
+                
+                if (!services[service]) {
+                    services[service] = { 
+                        billable: 0, 
+                        budgeted: 0, 
+                        jobs: 0,
+                        clients: new Set()
+                    };
+                }
+                services[service].billable += billable;
+                services[service].budgeted += budgeted;
+                services[service].jobs += 1;
+                if (client) services[service].clients.add(client);
+            });
+            
+            console.log('Service summary:', Object.entries(services).map(([name, data]) => ({
+                name,
+                jobs: data.jobs,
+                clients: data.clients.size
+            })));
+
+            const rows = Object.entries(services)
+                .sort((a, b) => b[1].jobs - a[1].jobs)
+                .map(([name, data]) => {
+                    const avgBillable = data.billable / data.jobs;
+                    const avgBudgeted = data.budgeted / data.jobs;
+                    const efficiency = data.budgeted > 0 ? (data.billable / data.budgeted) * 100 : 0;
+                    
+                    return `
+                        <tr>
+                            <td><strong>${name}</strong></td>
+                            <td>${data.clients.size}</td>
+                            <td>${avgBillable.toFixed(1)}h</td>
+                            <td>${avgBudgeted.toFixed(1)}h</td>
+                            <td><strong>${formatPercent(efficiency)}</strong></td>
+                            <td>${data.jobs}</td>
+                        </tr>
+                    `;
+                }).join('');
+            
+            document.getElementById('serviceTableBody').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;">No service data available</td></tr>';
+        }
+
+        function generateBalanceSheet() {
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            
+            transactionsData.forEach(txn => {
+                const type = (txn['Type'] || '').toLowerCase();
+                const amount = Math.abs(parseNumber(txn['Amount']));
+                if (type === 'income') totalIncome += amount;
+                if (type === 'expense') totalExpenses += amount;
+            });
+            
+            const netProfit = totalIncome - totalExpenses;
+            const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+            
+            // Get Bank Balance - scan all rows for first non-empty value
+            let bankBalance = 0;
+            for (let i = 0; i < allTransactionsData.length; i++) {
+                const balance = parseNumber(allTransactionsData[i]['Bank Balance']);
+                if (balance !== 0) {
+                    bankBalance = balance;
+                    break;
+                }
+            }
+            
+            const html = `
+                <div style="text-align:center;margin-bottom:30px;">
+                    <h1 style="color:var(--primary-green);">WS Lawn Care Services</h1>
+                    <p style="color:var(--text-light);">Balance Sheet</p>
+                    <p style="color:var(--text-light);">As of ${new Date().toLocaleDateString()}</p>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px;">
+                    <div>
+                        <h3 style="color:var(--primary-green);border-bottom:2px solid var(--primary-green);padding-bottom:10px;">Revenue</h3>
+                        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #e9ecef;">
+                            <span>Total Income</span>
+                            <strong>${formatCurrency(totalIncome)}</strong>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--primary-green);border-bottom:2px solid var(--primary-green);padding-bottom:10px;">Expenses</h3>
+                        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #e9ecef;">
+                            <span>Total Expenses</span>
+                            <strong>${formatCurrency(totalExpenses)}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background:#f8f9fa;padding:30px;border-radius:12px;">
+                    <h3 style="text-align:center;color:var(--primary-green);margin-bottom:20px;">Financial Summary</h3>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+                        <div style="text-align:center;background:white;padding:20px;border-radius:8px;">
+                            <div style="font-size:0.9em;color:var(--text-light);margin-bottom:10px;">NET PROFIT</div>
+                            <div style="font-size:2em;font-weight:700;color:${netProfit > 0 ? 'var(--success)' : 'var(--danger)'};">${formatCurrency(netProfit)}</div>
+                        </div>
+                        <div style="text-align:center;background:white;padding:20px;border-radius:8px;">
+                            <div style="font-size:0.9em;color:var(--text-light);margin-bottom:10px;">PROFIT MARGIN</div>
+                            <div style="font-size:2em;font-weight:700;">${formatPercent(profitMargin)}</div>
+                        </div>
+                        <div style="text-align:center;background:white;padding:20px;border-radius:8px;">
+                            <div style="font-size:0.9em;color:var(--text-light);margin-bottom:10px;">BANK BALANCE</div>
+                            <div style="font-size:2em;font-weight:700;">${formatCurrency(bankBalance)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:40px;text-align:center;color:var(--text-light);border-top:2px solid #e9ecef;padding-top:20px;">
+                    <p><strong>WS Lawn Care Services, LLC</strong></p>
+                    <p>"You grow it, we mow it!" • Jesus First Before Profits</p>
+                </div>
+            `;
+            
+            document.getElementById('balanceSheetContent').innerHTML = html;
+        }
+
+        function refreshData() {
+            closeAlert();
+            loadData();
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        console.log('🚀 WS Lawn Care Dashboard v2 - Restructured Data');
+        initializePickers();
+        loadData();
+    </script>
+</body>
+</html>
