@@ -1021,15 +1021,38 @@
             let bankBalance = 0;
             let lastChecked = 'N/A';
             
-            console.log('\n=== READING BANK BALANCE ===');
-            if (allTransactionsData.length > 1) {
-                const row3 = allTransactionsData[2]; // Row 2 is index 1
-                bankBalance = parseNumber(getTransactionValue(row3, 'Bank Balance'));
-                lastChecked = getTransactionValue(row3, 'Last Checked') || 'N/A';
-                console.log('✓ Row 3 Bank Balance (Column N):', bankBalance);
-                console.log('✓ Row 3 Last Checked (Column M):', lastChecked);
-            } else {
-                console.log('⚠️ Not enough rows in Transactions data');
+           // CORRECTED: Get Bank Balance from Column N Row 2
+let bankBalance = 0;
+let lastChecked = 'N/A';
+
+console.log('\n=== READING BANK BALANCE DEBUG ===');
+console.log('Total rows loaded:', allTransactionsData.length);
+
+if (allTransactionsData.length > 1) {
+    // Try Row 2 (index 1)
+    console.log('Checking Row 2 (index 1)...');
+    let row2 = allTransactionsData[1];
+    console.log('All columns in Row 2:', Object.keys(row2));
+    console.log('Bank Balance column exists?', 'Bank Balance' in row2);
+    console.log('Bank Balance raw value:', row2['Bank Balance']);
+    
+    bankBalance = parseNumber(getTransactionValue(row2, 'Bank Balance'));
+    lastChecked = getTransactionValue(row2, 'Last Checked') || 'N/A';
+    
+    console.log('✓ Parsed Bank Balance:', bankBalance);
+    console.log('✓ Last Checked:', lastChecked);
+    
+    // If still 0, try Row 3
+    if (bankBalance === 0 && allTransactionsData.length > 2) {
+        console.log('⚠️ Row 2 was 0, trying Row 3 (index 2)...');
+        row2 = allTransactionsData[2];
+        bankBalance = parseNumber(getTransactionValue(row2, 'Bank Balance'));
+        lastChecked = getTransactionValue(row2, 'Last Checked') || 'N/A';
+        console.log('✓ Row 3 Bank Balance:', bankBalance);
+    }
+} else {
+    console.log('⚠️ Not enough rows in Transactions data');
+}
             }
             
             const netProfit = totalIncome - totalExpenses;
