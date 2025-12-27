@@ -494,9 +494,8 @@
                 <div class="control-group">
                     <span class="control-label">View:</span>
                     <select id="viewType" onchange="changeViewType()">
-                        <option value="ytd">YTD 2025</option>
                         <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
+                        <option value="yearly" selected>Yearly</option>
                     </select>
                 </div>
                 
@@ -628,10 +627,6 @@
         const SPREADSHEET_ID = '1fFbsuDFXu_W4MK234vNwM-WsEHkcDp6N1Tn_ZRe_J1I';
         const TRANSACTIONS_GID = '1256593101';
 
-        // YTD Actuals from Yearly Budget
-        const YTD_INCOME_BUDGET = 154286;
-        const YTD_EXPENSES_BUDGET = 149284.26;
-
         // Auto-refresh variables
         let refreshIntervalId = null;
         let refreshCountdownId = null;
@@ -647,6 +642,7 @@
             'Amount': 'Amount',
             'Type': 'Type',
             'Cost Type': 'Cost Type',
+            'Group': 'Group',
             'Last Checked': 'Last Checked',
             'Bank Balance': 'Bank Balance',
             'Need Categorizing': 'Need Categorizing'
@@ -661,21 +657,11 @@
             return row[actualColumnName] || '';
         }
 
-        // Non-operational revenue categories
-        const NON_OPERATIONAL_CATEGORIES = [
-            'Interest Income',
-            'Investment Income',
-            'Grants',
-            'Donations',
-            'Other Income',
-            'Miscellaneous Income'
-        ];
-
         let allTransactionsData = [];
         let transactionsData = [];
         let revenueChart = null;
         let profitMarginChart = null;
-        let currentView = 'ytd';
+        let currentView = 'yearly';
 
         function initializePickers() {
             const yearSelect = document.getElementById('yearSelect');
@@ -874,13 +860,7 @@
         function filterDataByDateRange(data) {
             const view = document.getElementById('viewType').value;
             
-            if (view === 'ytd') {
-                return data.filter(row => {
-                    const dateStr = getTransactionValue(row, 'Date');
-                    const date = parseDate(dateStr);
-                    return date && date.getFullYear() === 2025;
-                });
-            } else if (view === 'monthly') {
+            if (view === 'monthly') {
                 const month = parseInt(document.getElementById('monthSelect').value);
                 const year = parseInt(document.getElementById('yearSelect').value);
                 return data.filter(row => {
@@ -888,7 +868,8 @@
                     const date = parseDate(dateStr);
                     return date && date.getMonth() === month && date.getFullYear() === year;
                 });
-            } else if (view === 'yearly') {
+            } else {
+                // Yearly view
                 const year = parseInt(document.getElementById('yearSelect').value);
                 return data.filter(row => {
                     const dateStr = getTransactionValue(row, 'Date');
@@ -896,7 +877,6 @@
                     return date && date.getFullYear() === year;
                 });
             }
-            return data;
         }
 
         function displayAllSections() {
@@ -910,9 +890,7 @@
 
         function getCurrentPeriodLabel() {
             const view = document.getElementById('viewType').value;
-            if (view === 'ytd') {
-                return 'Year to Date 2025';
-            } else if (view === 'monthly') {
+            if (view === 'monthly') {
                 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                                    'July', 'August', 'September', 'October', 'November', 'December'];
                 const month = parseInt(document.getElementById('monthSelect').value);
@@ -925,9 +903,7 @@
 
         function getCurrentPeriodShortLabel() {
             const view = document.getElementById('viewType').value;
-            if (view === 'ytd') {
-                return 'YTD';
-            } else if (view === 'monthly') {
+            if (view === 'monthly') {
                 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                 const month = parseInt(document.getElementById('monthSelect').value);
@@ -938,7 +914,7 @@
         }
 
         function displayFinancialOverview() {
-            const view = document.getElementById('viewType').value;
+            const periodLabel = getCurrentPeriodShortLabel();
             
             let totalIncome = 0;
             let operationalIncome = 0;
@@ -947,53 +923,27 @@
             let incomeCount = 0;
             let expenseCount = 0;
             
-            if (view === 'ytd') {
-                totalIncome = YTD_INCOME_BUDGET;
-                totalExpenses = YTD_EXPENSES_BUDGET;
+            // Always use actual transaction data
+            transactionsData.forEach(txn => {
+                const type = getTransactionValue(txn, 'Type').toLowerCase();
+                const group = getTransactionValue(txn, 'Group');
+                const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
                 
-                transactionsData.forEach(txn => {
-                    const type = getTransactionValue(txn, 'Type').toLowerCase();
-                    const category = getTransactionValue(txn, 'Category');
-                    const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
+                if (type === 'income') {
+                    totalIncome += amount;
+                    incomeCount++;
                     
-                    if (type === 'income') {
-                        incomeCount++;
-                        if (NON_OPERATIONAL_CATEGORIES.includes(category)) {
-                            nonOperationalIncome += amount;
-                        } else {
-                            operationalIncome += amount;
-                        }
+                    // Check Group column for "Non Operation Revenue"
+                    if (group === 'Non Operation Revenue') {
+                        nonOperationalIncome += amount;
+                    } else {
+                        operationalIncome += amount;
                     }
-                    if (type === 'expense') expenseCount++;
-                });
-                
-                if (operationalIncome + nonOperationalIncome > 0) {
-                    const ratio = totalIncome / (operationalIncome + nonOperationalIncome);
-                    operationalIncome *= ratio;
-                    nonOperationalIncome *= ratio;
-                } else {
-                    operationalIncome = totalIncome;
+                } else if (type === 'expense') {
+                    totalExpenses += amount;
+                    expenseCount++;
                 }
-            } else {
-                transactionsData.forEach(txn => {
-                    const type = getTransactionValue(txn, 'Type').toLowerCase();
-                    const category = getTransactionValue(txn, 'Category');
-                    const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
-                    
-                    if (type === 'income') {
-                        totalIncome += amount;
-                        incomeCount++;
-                        if (NON_OPERATIONAL_CATEGORIES.includes(category)) {
-                            nonOperationalIncome += amount;
-                        } else {
-                            operationalIncome += amount;
-                        }
-                    } else if (type === 'expense') {
-                        totalExpenses += amount;
-                        expenseCount++;
-                    }
-                });
-            }
+            });
             
             let bankBalance = 0;
             let lastChecked = 'N/A';
@@ -1089,7 +1039,7 @@
             
             document.getElementById('financialMetrics').innerHTML = html;
             
-            if (view === 'ytd' && profitMargin < 10) {
+            if (profitMargin < 10) {
                 showAlert(`🚨 CRITICAL: ${formatPercent(profitMargin)} profit margin! Industry minimum is 10%.`, 'danger');
             }
         }
@@ -1371,7 +1321,6 @@
         }
 
         function generateBalanceSheet() {
-            const view = document.getElementById('viewType').value;
             let totalIncome = 0;
             let operationalIncome = 0;
             let nonOperationalIncome = 0;
@@ -1381,85 +1330,36 @@
             
             const expensesByCategory = {};
             
-            if (view === 'ytd') {
-                // Use budget totals for YTD
-                totalIncome = YTD_INCOME_BUDGET;
-                totalExpenses = YTD_EXPENSES_BUDGET;
+            // Always use actual transaction data
+            transactionsData.forEach(txn => {
+                const type = getTransactionValue(txn, 'Type').toLowerCase();
+                const group = getTransactionValue(txn, 'Group');
+                const category = getTransactionValue(txn, 'Category');
+                const costType = getTransactionValue(txn, 'Cost Type').toLowerCase();
+                const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
                 
-                // Calculate operational vs non-operational from transactions
-                transactionsData.forEach(txn => {
-                    const type = getTransactionValue(txn, 'Type').toLowerCase();
-                    const category = getTransactionValue(txn, 'Category');
-                    const costType = getTransactionValue(txn, 'Cost Type').toLowerCase();
-                    const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
+                if (type === 'income') {
+                    totalIncome += amount;
                     
-                    if (type === 'income') {
-                        if (NON_OPERATIONAL_CATEGORIES.includes(category)) {
-                            nonOperationalIncome += amount;
-                        } else {
-                            operationalIncome += amount;
-                        }
+                    // Check Group column for "Non Operation Revenue"
+                    if (group === 'Non Operation Revenue') {
+                        nonOperationalIncome += amount;
+                    } else {
+                        operationalIncome += amount;
                     }
-                    if (type === 'expense') {
-                        if (costType === 'fixed') fixedCosts += amount;
-                        if (costType === 'variable') variableCosts += amount;
-                        
-                        if (!expensesByCategory[category]) {
-                            expensesByCategory[category] = 0;
-                        }
-                        expensesByCategory[category] += amount;
-                    }
-                });
-                
-                // Scale operational/non-operational to match budget totals
-                if (operationalIncome + nonOperationalIncome > 0) {
-                    const ratio = totalIncome / (operationalIncome + nonOperationalIncome);
-                    operationalIncome *= ratio;
-                    nonOperationalIncome *= ratio;
-                } else {
-                    operationalIncome = totalIncome;
                 }
-                
-                // Scale expenses proportionally
-                if (fixedCosts + variableCosts > 0) {
-                    const expenseRatio = totalExpenses / (fixedCosts + variableCosts);
-                    fixedCosts *= expenseRatio;
-                    variableCosts *= expenseRatio;
+                if (type === 'expense') {
+                    totalExpenses += amount;
                     
-                    // Scale category expenses
-                    Object.keys(expensesByCategory).forEach(cat => {
-                        expensesByCategory[cat] *= expenseRatio;
-                    });
+                    if (costType === 'fixed') fixedCosts += amount;
+                    if (costType === 'variable') variableCosts += amount;
+                    
+                    if (!expensesByCategory[category]) {
+                        expensesByCategory[category] = 0;
+                    }
+                    expensesByCategory[category] += amount;
                 }
-            } else {
-                // Use actual transaction data for monthly/yearly
-                transactionsData.forEach(txn => {
-                    const type = getTransactionValue(txn, 'Type').toLowerCase();
-                    const category = getTransactionValue(txn, 'Category');
-                    const costType = getTransactionValue(txn, 'Cost Type').toLowerCase();
-                    const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
-                    
-                    if (type === 'income') {
-                        totalIncome += amount;
-                        if (NON_OPERATIONAL_CATEGORIES.includes(category)) {
-                            nonOperationalIncome += amount;
-                        } else {
-                            operationalIncome += amount;
-                        }
-                    }
-                    if (type === 'expense') {
-                        totalExpenses += amount;
-                        
-                        if (costType === 'fixed') fixedCosts += amount;
-                        if (costType === 'variable') variableCosts += amount;
-                        
-                        if (!expensesByCategory[category]) {
-                            expensesByCategory[category] = 0;
-                        }
-                        expensesByCategory[category] += amount;
-                    }
-                });
-            }
+            });
             
             let bankBalance = 0;
             let lastChecked = 'N/A';
@@ -1580,10 +1480,11 @@
         }
 
         console.log('🚀 WS Lawn Care Financial Dashboard');
-        console.log('✅ Financial metrics only');
-        console.log('✅ Compact header design');
-        console.log('✅ Clean info modals');
-        console.log('✅ Profit margin chart added');
+        console.log('✅ All data from Transactions sheet');
+        console.log('✅ Non-operational revenue filtered by Group column');
+        console.log('✅ Simplified views: Monthly & Yearly');
+        console.log('✅ Dynamic period labels');
+        console.log('✅ Print-friendly balance sheet');
         initializePickers();
         loadData();
     </script>
