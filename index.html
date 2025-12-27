@@ -449,21 +449,134 @@
         .refresh-indicator.active { display: block; }
         
         @media print {
-            body * { visibility: hidden; }
-            #balanceSheetModal, #balanceSheetModal * { visibility: visible; }
+            /* Hide everything except the balance sheet modal */
+            body * { 
+                visibility: hidden; 
+            }
+            
+            #balanceSheetModal, 
+            #balanceSheetModal * { 
+                visibility: visible; 
+            }
+            
+            /* Position modal for print */
             #balanceSheetModal { 
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
                 background: white;
+                display: block !important;
             }
+            
+            /* Clean modal styling for print */
             .modal-content {
                 box-shadow: none;
                 max-width: 100%;
                 max-height: none;
+                padding: 40px 60px;
+                border-radius: 0;
             }
-            .btn, .close-modal { display: none !important; }
+            
+            /* Hide interactive elements */
+            .btn, 
+            .close-modal,
+            .modal-header button,
+            .print-buttons { 
+                display: none !important; 
+            }
+            
+            /* Hide modal header for cleaner print */
+            .modal-header {
+                display: none !important;
+            }
+            
+            /* Clean page breaks */
+            .balance-sheet-section,
+            .highlight-box,
+            .print-kpi-section,
+            .print-revenue-expense-section,
+            .print-expenses-section,
+            .print-summary-section {
+                page-break-inside: avoid;
+            }
+            
+            /* Ensure good contrast - use explicit colors instead of variables */
+            .print-header h1,
+            .print-kpi-section h2,
+            .balance-sheet-section h3,
+            .print-summary-section h3 {
+                color: #2d5016 !important;
+            }
+            
+            .print-header p,
+            .stat-label,
+            .print-footer {
+                color: #7f8c8d !important;
+            }
+            
+            /* Preserve important colors */
+            .stat-value {
+                color: #2d5016 !important;
+            }
+            
+            /* Grid layout for print */
+            .stat-grid {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 15px !important;
+                page-break-inside: avoid;
+            }
+            
+            /* Balance sections side by side */
+            .print-revenue-expense-section {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 30px !important;
+                page-break-inside: avoid;
+            }
+            
+            /* Stat items styling */
+            .stat-item {
+                background: white !important;
+                border: 1px solid #ddd !important;
+                box-shadow: none !important;
+                border-radius: 8px !important;
+                padding: 15px !important;
+            }
+            
+            /* Highlight boxes */
+            .highlight-box {
+                background: #f8f9fa !important;
+                border: 1px solid #ddd !important;
+                border-left: 4px solid #2d5016 !important;
+                box-shadow: none !important;
+            }
+            
+            /* Balance items */
+            .balance-item {
+                border-bottom: 1px solid #e9ecef !important;
+            }
+            
+            .balance-item.total {
+                border-top: 2px solid #2d5016 !important;
+                border-bottom: 2px solid #2d5016 !important;
+            }
+            
+            /* Footer */
+            .print-footer {
+                border-top: 2px solid #e9ecef !important;
+            }
+            
+            /* Ensure all text is black for printing */
+            p, span, strong, div {
+                color: #000 !important;
+            }
+            
+            /* Override for specific colored elements */
+            .stat-label {
+                color: #7f8c8d !important;
+            }
         }
         
         @media (max-width: 768px) {
@@ -613,8 +726,8 @@
                 <button class="close-modal" onclick="closeBalanceSheet()">&times;</button>
             </div>
             <div id="balanceSheetContent"></div>
-            <div style="text-align:center;margin-top:20px;">
-                <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+            <div style="text-align:center;margin-top:20px;" class="print-buttons">
+                <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save as PDF</button>
             </div>
         </div>
     </div>
@@ -1372,81 +1485,81 @@
                 .slice(0, 10);
             
             const html = `
-                <div style="text-align:center;margin-bottom:30px;">
-                    <h1 style="color:var(--primary-green);">WS Lawn Care Services, LLC</h1>
-                    <p style="color:var(--text-light); font-size:1.2em;">Balance Sheet & Financial Report</p>
-                    <p style="color:var(--text-light);">Period: ${getCurrentPeriodLabel()}</p>
-                    <p style="color:var(--text-light);">Generated: ${new Date().toLocaleString()}</p>
+                <div class="print-header" style="text-align:center;margin-bottom:30px;">
+                    <h1 style="color:#2d5016;font-size:2em;margin-bottom:10px;">WS Lawn Care Services, LLC</h1>
+                    <p style="color:#7f8c8d;font-size:1.2em;margin:5px 0;">Balance Sheet & Financial Report</p>
+                    <p style="color:#7f8c8d;margin:5px 0;">Period: ${getCurrentPeriodLabel()}</p>
+                    <p style="color:#7f8c8d;margin:5px 0;font-size:0.9em;">Generated: ${new Date().toLocaleString()}</p>
                 </div>
 
-                <div class="highlight-box">
-                    <h2 style="color:var(--primary-green);text-align:center;margin-bottom:20px;">Key Performance Indicators</h2>
+                <div class="highlight-box print-kpi-section" style="background:#f8f9fa;padding:20px;border-radius:8px;margin:20px 0;border-left:4px solid #2d5016;">
+                    <h2 style="color:#2d5016;text-align:center;margin-bottom:20px;font-size:1.3em;">Key Performance Indicators</h2>
                     <div class="stat-grid">
-                        <div class="stat-item">
-                            <div class="stat-label">Net Profit</div>
-                            <div class="stat-value" style="color:${netProfit > 0 ? 'var(--success)' : 'var(--danger)'};">${formatCurrency(netProfit)}</div>
+                        <div class="stat-item" style="text-align:center;padding:15px;background:white;border-radius:8px;">
+                            <div class="stat-label" style="font-size:0.85em;color:#7f8c8d;margin-bottom:8px;">Net Profit</div>
+                            <div class="stat-value" style="font-size:1.5em;font-weight:700;color:${netProfit > 0 ? '#27ae60' : '#e74c3c'};">${formatCurrency(netProfit)}</div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Profit Margin</div>
-                            <div class="stat-value">${formatPercent(profitMargin)}</div>
+                        <div class="stat-item" style="text-align:center;padding:15px;background:white;border-radius:8px;">
+                            <div class="stat-label" style="font-size:0.85em;color:#7f8c8d;margin-bottom:8px;">Profit Margin</div>
+                            <div class="stat-value" style="font-size:1.5em;font-weight:700;color:#2d5016;">${formatPercent(profitMargin)}</div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Bank Balance</div>
-                            <div class="stat-value">${formatCurrency(bankBalance)}</div>
+                        <div class="stat-item" style="text-align:center;padding:15px;background:white;border-radius:8px;">
+                            <div class="stat-label" style="font-size:0.85em;color:#7f8c8d;margin-bottom:8px;">Bank Balance</div>
+                            <div class="stat-value" style="font-size:1.5em;font-weight:700;color:#2d5016;">${formatCurrency(bankBalance)}</div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Total Transactions</div>
-                            <div class="stat-value">${transactionsData.length}</div>
+                        <div class="stat-item" style="text-align:center;padding:15px;background:white;border-radius:8px;">
+                            <div class="stat-label" style="font-size:0.85em;color:#7f8c8d;margin-bottom:8px;">Total Transactions</div>
+                            <div class="stat-value" style="font-size:1.5em;font-weight:700;color:#2d5016;">${transactionsData.length}</div>
                         </div>
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin:30px 0;">
+                <div class="print-revenue-expense-section" style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin:30px 0;">
                     <div class="balance-sheet-section">
-                        <h3>Revenue Breakdown</h3>
-                        <div class="balance-item">
+                        <h3 style="color:#2d5016;border-bottom:2px solid #2d5016;padding-bottom:10px;margin-bottom:15px;">Revenue Breakdown</h3>
+                        <div class="balance-item" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e9ecef;">
                             <span>Operational Income</span>
                             <strong>${formatCurrency(operationalIncome)}</strong>
                         </div>
-                        <div class="balance-item">
+                        <div class="balance-item" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e9ecef;">
                             <span>Non-Operational Income</span>
                             <strong>${formatCurrency(nonOperationalIncome)}</strong>
                         </div>
-                        <div class="balance-item total">
+                        <div class="balance-item total" style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid #2d5016;border-bottom:2px solid #2d5016;margin-top:10px;font-weight:700;font-size:1.1em;">
                             <span>Total Income</span>
                             <strong>${formatCurrency(totalIncome)}</strong>
                         </div>
                     </div>
 
                     <div class="balance-sheet-section">
-                        <h3>Expense Breakdown</h3>
-                        <div class="balance-item">
+                        <h3 style="color:#2d5016;border-bottom:2px solid #2d5016;padding-bottom:10px;margin-bottom:15px;">Expense Breakdown</h3>
+                        <div class="balance-item" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e9ecef;">
                             <span>Fixed Costs</span>
                             <strong>${formatCurrency(fixedCosts)}</strong>
                         </div>
-                        <div class="balance-item">
+                        <div class="balance-item" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e9ecef;">
                             <span>Variable Costs</span>
                             <strong>${formatCurrency(variableCosts)}</strong>
                         </div>
-                        <div class="balance-item total">
+                        <div class="balance-item total" style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid #2d5016;border-bottom:2px solid #2d5016;margin-top:10px;font-weight:700;font-size:1.1em;">
                             <span>Total Expenses</span>
                             <strong>${formatCurrency(totalExpenses)}</strong>
                         </div>
                     </div>
                 </div>
 
-                <div class="balance-sheet-section">
-                    <h3>Top 10 Expense Categories</h3>
+                <div class="balance-sheet-section print-expenses-section" style="margin-top:30px;">
+                    <h3 style="color:#2d5016;border-bottom:2px solid #2d5016;padding-bottom:10px;margin-bottom:15px;">Top 10 Expense Categories</h3>
                     ${topExpenses.map(([category, amount]) => `
-                        <div class="balance-item">
+                        <div class="balance-item" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e9ecef;">
                             <span>${category}</span>
                             <strong>${formatCurrency(amount)}</strong>
                         </div>
                     `).join('')}
                 </div>
 
-                <div class="highlight-box" style="margin-top:30px;">
-                    <h3 style="color:var(--primary-green);margin-bottom:15px;">Financial Health Summary</h3>
+                <div class="highlight-box print-summary-section" style="margin-top:30px;background:#f8f9fa;padding:20px;border-radius:8px;border-left:4px solid #2d5016;">
+                    <h3 style="color:#2d5016;margin-bottom:15px;font-size:1.2em;">Financial Health Summary</h3>
                     <div style="line-height:2;">
                         <p><strong>Bank Balance:</strong> ${formatCurrency(bankBalance)} (Last Checked: ${lastChecked})</p>
                         <p><strong>Net Profit:</strong> ${formatCurrency(netProfit)} (${formatPercent(profitMargin)} margin)</p>
@@ -1454,7 +1567,7 @@
                     </div>
                 </div>
 
-                <div style="margin-top:40px;text-align:center;color:var(--text-light);border-top:2px solid #e9ecef;padding-top:20px;">
+                <div class="print-footer" style="margin-top:40px;text-align:center;color:#7f8c8d;border-top:2px solid #e9ecef;padding-top:20px;">
                     <p><strong>WS Lawn Care Services, LLC</strong></p>
                     <p>"You grow it, we mow it!" • Jesus First Before Profits</p>
                     <p style="margin-top:10px;font-size:0.9em;">This report is for internal use only and contains confidential business information.</p>
@@ -1480,7 +1593,7 @@
         console.log('✅ Non-operational revenue filtered by Group column');
         console.log('✅ Simplified views: Monthly & Yearly');
         console.log('✅ Dynamic period labels');
-        console.log('✅ Print-friendly balance sheet');
+        console.log('✅ Professional print/PDF output');
         initializePickers();
         loadData();
     </script>
