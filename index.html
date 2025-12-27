@@ -1023,9 +1023,9 @@
             
             console.log('\n=== READING BANK BALANCE ===');
             if (allTransactionsData.length > 1) {
-                const row2 = allTransactionsData[2]; // Row 2 is index 1
-                bankBalance = parseNumber(getTransactionValue(row2, 'Bank Balance'));
-                lastChecked = getTransactionValue(row2, 'Last Checked') || 'N/A';
+                const row3 = allTransactionsData[2]; // Row 2 is index 1
+                bankBalance = parseNumber(getTransactionValue(row3, 'Bank Balance'));
+                lastChecked = getTransactionValue(row3, 'Last Checked') || 'N/A';
                 console.log('✓ Row 3 Bank Balance (Column N):', bankBalance);
                 console.log('✓ Row 3 Last Checked (Column M):', lastChecked);
             } else {
