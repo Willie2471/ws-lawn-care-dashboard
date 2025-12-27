@@ -958,8 +958,6 @@
             const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
             const alertClass = profitMargin < 10 ? 'alert-danger' : profitMargin < 15 ? 'alert-warning' : '';
             
-            const periodLabel = getCurrentPeriodShortLabel();
-            
             const html = `
                 <div class="metric-card">
                     <button class="info-button" onclick="showInfoModal('Operational Revenue', '<strong>Definition:</strong> Revenue generated from core business operations (sales and services).<br><br><strong>Excludes:</strong> Interest, investments, grants, donations, and other non-operating income.<br><br><strong>Target:</strong> Should be 90%+ of total income for healthy business focus.')">ℹ️</button>
@@ -1149,9 +1147,8 @@
             if (revenueChart) revenueChart.destroy();
             
             const view = document.getElementById('viewType').value;
-            const chartLabel = view === 'ytd' ? 'Monthly Revenue 2025' : 
-                               view === 'yearly' ? `Monthly Revenue ${document.getElementById('yearSelect').value}` :
-                               'Revenue';
+            const chartLabel = view === 'yearly' ? `Monthly Revenue ${document.getElementById('yearSelect').value}` :
+                               `Revenue - ${getCurrentPeriodLabel()}`;
             
             revenueChart = new Chart(ctx, {
                 type: 'line',
@@ -1231,9 +1228,8 @@
             if (profitMarginChart) profitMarginChart.destroy();
             
             const view = document.getElementById('viewType').value;
-            const chartLabel = view === 'ytd' ? 'Monthly Profit Margin 2025' : 
-                               view === 'yearly' ? `Monthly Profit Margin ${document.getElementById('yearSelect').value}` :
-                               'Profit Margin';
+            const chartLabel = view === 'yearly' ? `Monthly Profit Margin ${document.getElementById('yearSelect').value}` :
+                               `Profit Margin - ${getCurrentPeriodLabel()}`;
             
             profitMarginChart = new Chart(ctx, {
                 type: 'line',
