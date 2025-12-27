@@ -1026,8 +1026,8 @@
                 const row2 = allTransactionsData[2]; // Row 2 is index 1
                 bankBalance = parseNumber(getTransactionValue(row2, 'Bank Balance'));
                 lastChecked = getTransactionValue(row2, 'Last Checked') || 'N/A';
-                console.log('✓ Row 2 Bank Balance (Column N):', bankBalance);
-                console.log('✓ Row 2 Last Checked (Column M):', lastChecked);
+                console.log('✓ Row 3 Bank Balance (Column N):', bankBalance);
+                console.log('✓ Row 3 Last Checked (Column M):', lastChecked);
             } else {
                 console.log('⚠️ Not enough rows in Transactions data');
             }
