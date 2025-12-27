@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WS Lawn Care - Ultimate Dashboard FINAL</title>
+    <title>WS Lawn Care - Ultimate Dashboard ENHANCED</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
@@ -95,7 +95,7 @@
             font-weight: 600;
         }
         
-        select {
+        select, input[type="number"] {
             padding: 8px 12px;
             border: 2px solid var(--border-color);
             border-radius: 6px;
@@ -106,7 +106,7 @@
             transition: all 0.2s;
         }
         
-        select:hover { border-color: var(--primary-green); }
+        select:hover, input[type="number"]:hover { border-color: var(--primary-green); }
         
         .btn {
             padding: 10px 20px;
@@ -218,6 +218,31 @@
             background: linear-gradient(135deg, #fffbf0 0%, #fff3cd 100%);
         }
         
+        .info-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--info);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .info-button:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+        
         .metric-header {
             display: flex;
             justify-content: space-between;
@@ -245,6 +270,22 @@
         .metric-subtitle {
             font-size: 0.85em;
             color: var(--text-light);
+        }
+        
+        .metric-definition {
+            font-size: 0.8em;
+            color: var(--text-light);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e9ecef;
+            line-height: 1.4;
+        }
+        
+        .metric-target {
+            font-size: 0.75em;
+            color: var(--success);
+            font-weight: 600;
+            margin-top: 4px;
         }
         
         .metric-badge {
@@ -338,8 +379,83 @@
         
         .close-modal:hover { color: var(--text-dark); }
         
+        .balance-sheet-section {
+            margin: 20px 0;
+        }
+        
+        .balance-sheet-section h3 {
+            color: var(--primary-green);
+            border-bottom: 2px solid var(--primary-green);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .balance-item.total {
+            font-weight: 700;
+            font-size: 1.1em;
+            border-bottom: 2px solid var(--primary-green);
+            margin-top: 10px;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid var(--primary-green);
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .refresh-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--info);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+        }
+        
+        .refresh-indicator.active { display: block; }
+        
         @media print {
-            .dashboard-header, .btn, .modal { display: none !important; }
+            .dashboard-header, .btn, .modal, .info-button { display: none !important; }
         }
         
         @media (max-width: 768px) {
@@ -362,8 +478,8 @@
             <div class="logo-section">
                 <img src="ws_lawn_care_logo.png" alt="WS Lawn Care" onerror="this.style.display='none'">
                 <div class="title-section">
-                    <h1>Ultimate Business Dashboard ✨ FINAL</h1>
-                    <p>"You grow it, we mow it!" - Complete & Accurate</p>
+                    <h1>Ultimate Business Dashboard 🚀 ENHANCED</h1>
+                    <p>"You grow it, we mow it!" - Full Featured</p>
                 </div>
             </div>
             <div class="header-controls">
@@ -398,6 +514,18 @@
                     <div class="control-group" id="yearPicker">
                         <span class="control-label">Year:</span>
                         <select id="yearSelect" onchange="filterAndDisplay()"></select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <span class="control-label">Auto-Refresh:</span>
+                        <select id="refreshInterval" onchange="setRefreshInterval()">
+                            <option value="0">Off</option>
+                            <option value="60">1 min</option>
+                            <option value="300">5 min</option>
+                            <option value="900">15 min</option>
+                            <option value="1800">30 min</option>
+                            <option value="3600">1 hour</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -494,6 +622,10 @@
         </div>
     </div>
 
+    <div class="refresh-indicator" id="refreshIndicator">
+        Auto-refreshing in <span id="refreshCountdown">60</span>s
+    </div>
+
     <script>
         const SPREADSHEET_ID = '1fFbsuDFXu_W4MK234vNwM-WsEHkcDp6N1Tn_ZRe_J1I';
         const YEARLY_BUDGET_GID = '865052300';
@@ -504,22 +636,27 @@
         const YTD_INCOME_BUDGET = 154286;
         const YTD_EXPENSES_BUDGET = 149284.26;
 
-        // Standard workday hours for efficiency calculations
+        // Standard workday hours
         const STANDARD_WORKDAY_HOURS = 8;
 
+        // Auto-refresh variables
+        let refreshIntervalId = null;
+        let refreshCountdownId = null;
+        let secondsRemaining = 0;
+
         // ============================================
-        // TRANSACTIONS COLUMN MAPPING
+        // TRANSACTIONS COLUMN MAPPING (CORRECTED)
         // ============================================
         const TRANSACTIONS_COLUMNS = {
-            'Date': 'Date',
-            'Description': 'Description',
-            'Category': 'Category',
-            'Amount': 'Amount',
-            'Type': 'Type',
-            'Cost Type': 'Cost Type',
-            'Bank Balance': 'Bank Balance',
-            'Last Checked': 'Last Checked',
-            'Need Categorizing': 'Need Categorizing'
+            'Date': 'Date',                    // Column A
+            'Description': 'Description',      // Column B
+            'Category': 'Category',            // Column C
+            'Amount': 'Amount',                // Column D
+            'Type': 'Type',                    // Column J
+            'Cost Type': 'Cost Type',          // Column K
+            'Last Checked': 'Last Checked',    // Column M
+            'Bank Balance': 'Bank Balance',    // Column N ← CORRECTED!
+            'Need Categorizing': 'Need Categorizing'  // Column L
         };
 
         function getTransactionValue(row, logicalColumnName) {
@@ -535,20 +672,20 @@
         // COST ANALYSIS COLUMN MAPPING
         // ============================================
         const COST_ANALYSIS_COLUMNS = {
-            'Client Name': 'Client Name',
-            'Job Date': 'Job Date',
-            'Service': 'Service',
-            'Rate': 'Rate',
-            'Assigned Resources': 'Assigned Resources',
-            'Billable Hours': 'Billable Hours',
-            'Budgeted Hours': 'Budgeted Hours',
-            'Variance': 'Variance',
-            'Discount Amount': 'Discount Amount',
-            'Job Amount': 'Job Amount',
-            'Job Status': 'Job Status',
-            'Job Type': 'Job Type',
-            'Source': 'Source',
-            'Client Since': 'Client Since'
+            'Client Name': 'Client Name',              // Column A
+            'Job Date': 'Job Date',                    // Column C
+            'Service': 'Service',                      // Column F
+            'Rate': 'Rate',                            // Column G
+            'Assigned Resources': 'Assigned Resources',// Column H
+            'Billable Hours': 'Billable Hours',        // Column I
+            'Budgeted Hours': 'Budgeted Hours',        // Column J
+            'Variance': 'Variance',                    // Column K
+            'Discount Amount': 'Discount Amount',      // Column L
+            'Job Amount': 'Job Amount',                // Column M
+            'Job Status': 'Job Status',                // Column N
+            'Job Type': 'Job Type',                    // Column O
+            'Source': 'Source',                        // Column P
+            'Client Since': 'Client Since'             // Column Q
         };
 
         function getCostAnalysisValue(row, logicalColumnName) {
@@ -560,8 +697,7 @@
             return row[actualColumnName] || '';
         }
 
-        // Categories that are NON-OPERATIONAL revenue
-        // Customize this list based on your business
+        // Non-operational revenue categories
         const NON_OPERATIONAL_CATEGORIES = [
             'Interest Income',
             'Investment Income',
@@ -598,6 +734,41 @@
             }
         }
 
+        function setRefreshInterval() {
+            const seconds = parseInt(document.getElementById('refreshInterval').value);
+            
+            // Clear existing intervals
+            if (refreshIntervalId) clearInterval(refreshIntervalId);
+            if (refreshCountdownId) clearInterval(refreshCountdownId);
+            
+            if (seconds > 0) {
+                secondsRemaining = seconds;
+                document.getElementById('refreshIndicator').classList.add('active');
+                
+                // Countdown display
+                refreshCountdownId = setInterval(() => {
+                    secondsRemaining--;
+                    document.getElementById('refreshCountdown').textContent = secondsRemaining;
+                    if (secondsRemaining <= 0) {
+                        secondsRemaining = seconds;
+                    }
+                }, 1000);
+                
+                // Actual refresh
+                refreshIntervalId = setInterval(() => {
+                    console.log('🔄 Auto-refresh triggered');
+                    loadData();
+                }, seconds * 1000);
+                
+                showAlert(`✅ Auto-refresh enabled: Every ${seconds >= 60 ? Math.floor(seconds/60) + ' minute(s)' : seconds + ' seconds'}`, 'success');
+                setTimeout(() => closeAlert(), 3000);
+            } else {
+                document.getElementById('refreshIndicator').classList.remove('active');
+                showAlert('Auto-refresh disabled', 'info');
+                setTimeout(() => closeAlert(), 2000);
+            }
+        }
+
         async function fetchSheetData(sheetGid, sheetName) {
             const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${sheetGid}`;
             console.log(`Fetching ${sheetName}...`);
@@ -611,7 +782,6 @@
             return data;
         }
 
-        // Robust CSV parser
         function parseCSV(text) {
             const lines = text.split('\n').filter(line => line.trim());
             if (lines.length === 0) return [];
@@ -706,20 +876,28 @@
 
         async function loadData() {
             try {
-                console.log('🔄 Loading dashboard data with ALL corrections...');
+                console.log('🔄 Loading dashboard data...');
                 
                 [allTransactionsData, allCostAnalysisData] = await Promise.all([
                     fetchSheetData(TRANSACTIONS_GID, 'Transactions'),
                     fetchSheetData(COST_ANALYSIS_GID, 'Cost Analysis')
                 ]);
 
-                console.log('✨ Data loaded successfully:');
-                console.log('  - Transactions:', allTransactionsData.length, 'rows');
-                console.log('  - Cost Analysis:', allCostAnalysisData.length, 'rows');
+                console.log('✨ Data loaded successfully');
+                
+                // Debug Bank Balance location
+                console.log('\n=== BANK BALANCE DEBUG ===');
+                console.log('Checking Row 2 (index 1):');
+                if (allTransactionsData.length > 1) {
+                    const row2 = allTransactionsData[1];
+                    console.log('All columns in Row 2:', Object.keys(row2));
+                    console.log('Bank Balance column value:', row2['Bank Balance']);
+                    console.log('Last Checked column value:', row2['Last Checked']);
+                }
                 
                 filterAndDisplay();
-                showAlert('✅ All data loaded successfully with verified column mappings!', 'success');
-                setTimeout(() => closeAlert(), 5000);
+                showAlert('✅ All data loaded successfully!', 'success');
+                setTimeout(() => closeAlert(), 3000);
                 
             } catch (error) {
                 console.error('❌ Load error:', error);
@@ -792,11 +970,9 @@
             let expenseCount = 0;
             
             if (view === 'ytd') {
-                // Use YTD from Yearly Budget for total income/expenses
                 totalIncome = YTD_INCOME_BUDGET;
                 totalExpenses = YTD_EXPENSES_BUDGET;
                 
-                // But calculate operational vs non-operational split from transactions
                 transactionsData.forEach(txn => {
                     const type = getTransactionValue(txn, 'Type').toLowerCase();
                     const category = getTransactionValue(txn, 'Category');
@@ -813,13 +989,11 @@
                     if (type === 'expense') expenseCount++;
                 });
                 
-                // If we calculated a split, adjust proportionally to match YTD total
                 if (operationalIncome + nonOperationalIncome > 0) {
                     const ratio = totalIncome / (operationalIncome + nonOperationalIncome);
                     operationalIncome *= ratio;
                     nonOperationalIncome *= ratio;
                 } else {
-                    // All income is operational if we can't determine split
                     operationalIncome = totalIncome;
                 }
             } else {
@@ -843,14 +1017,19 @@
                 });
             }
             
-            // Get Bank Balance and Last Checked from row 2 (index 1 in data array)
+            // CORRECTED: Get Bank Balance from Column N Row 2
             let bankBalance = 0;
             let lastChecked = 'N/A';
             
+            console.log('\n=== READING BANK BALANCE ===');
             if (allTransactionsData.length > 1) {
-                bankBalance = parseNumber(getTransactionValue(allTransactionsData[1], 'Bank Balance'));
-                lastChecked = getTransactionValue(allTransactionsData[1], 'Last Checked') || 'N/A';
-                console.log(`✓ Bank Balance: ${formatCurrency(bankBalance)}, Last Checked: ${lastChecked}`);
+                const row2 = allTransactionsData[1]; // Row 2 is index 1
+                bankBalance = parseNumber(getTransactionValue(row2, 'Bank Balance'));
+                lastChecked = getTransactionValue(row2, 'Last Checked') || 'N/A';
+                console.log('✓ Row 2 Bank Balance (Column N):', bankBalance);
+                console.log('✓ Row 2 Last Checked (Column M):', lastChecked);
+            } else {
+                console.log('⚠️ Not enough rows in Transactions data');
             }
             
             const netProfit = totalIncome - totalExpenses;
@@ -861,21 +1040,26 @@
             
             const html = `
                 <div class="metric-card">
+                    <button class="info-button" onclick="alert('OPERATIONAL REVENUE\\n\\nDefinition: Revenue generated from core business operations (sales and services).\\n\\nExcludes: Interest, investments, grants, donations, and other non-operating income.\\n\\nTarget: Should be 90%+ of total income for healthy business focus.')">ℹ️</button>
                     <div class="metric-header">
                         <span class="metric-title">Operational Revenue ${viewLabel}</span>
                         <span class="metric-icon">💼</span>
                     </div>
                     <div class="metric-value">${formatCurrency(operationalIncome)}</div>
                     <div class="metric-subtitle">Revenue from sales & services</div>
+                    <div class="metric-definition">Core business income from lawn care operations</div>
+                    <div class="metric-target">Target: 90%+ of total income</div>
                 </div>
 
                 <div class="metric-card">
+                    <button class="info-button" onclick="alert('NON-OPERATIONAL REVENUE\\n\\nDefinition: Income from sources outside core business operations.\\n\\nIncludes: Interest income, investment returns, grants, donations, miscellaneous income.\\n\\nTarget: Should be <10% of total income for operational focus.')">ℹ️</button>
                     <div class="metric-header">
                         <span class="metric-title">Non-Operational Revenue</span>
                         <span class="metric-icon">📈</span>
                     </div>
                     <div class="metric-value">${formatCurrency(nonOperationalIncome)}</div>
                     <div class="metric-subtitle">Interest, grants, other income</div>
+                    <div class="metric-definition">Passive and non-core revenue sources</div>
                 </div>
 
                 <div class="metric-card">
@@ -897,12 +1081,15 @@
                 </div>
 
                 <div class="metric-card ${alertClass}">
+                    <button class="info-button" onclick="alert('NET PROFIT MARGIN\\n\\nFormula: (Net Profit ÷ Total Income) × 100\\n\\nDefinition: Percentage of revenue remaining after all expenses.\\n\\nTargets:\\n• 15%+ = Healthy (green)\\n• 10-15% = Low (yellow)\\n• <10% = Critical (red)\\n\\nIndustry Standard: 15-25% for lawn care services')">ℹ️</button>
                     <div class="metric-header">
                         <span class="metric-title">Net Profit ${viewLabel}</span>
                         <span class="metric-icon">💡</span>
                     </div>
                     <div class="metric-value">${formatCurrency(netProfit)}</div>
                     <div class="metric-subtitle">Margin: ${formatPercent(profitMargin)}</div>
+                    <div class="metric-definition">Income minus all expenses</div>
+                    <div class="metric-target">Target: 15-25% margin</div>
                     <div class="metric-badge ${profitMargin >= 15 ? 'badge-good' : profitMargin >= 10 ? 'badge-warning' : 'badge-danger'}">
                         ${profitMargin >= 15 ? '✅ Healthy' : profitMargin >= 10 ? '⚠️ Low' : '🚨 Critical'}
                     </div>
@@ -915,6 +1102,7 @@
                     </div>
                     <div class="metric-value">${formatCurrency(bankBalance)}</div>
                     <div class="metric-subtitle">Last Checked: ${lastChecked}</div>
+                    <div class="metric-definition">Current checking account balance</div>
                 </div>
 
                 <div class="metric-card">
@@ -977,24 +1165,30 @@
             
             const html = `
                 <div class="metric-card">
+                    <button class="info-button" onclick="alert('FIXED COSTS\\n\\nDefinition: Expenses that remain constant regardless of business activity.\\n\\nExamples: Rent, insurance, salaries, equipment leases, subscriptions.\\n\\nTarget: 30-35% of total costs\\n\\nBest Practice: Keep fixed costs low for flexibility during slow seasons.')">ℹ️</button>
                     <div class="metric-header">
                         <span class="metric-title">Fixed Costs</span>
                         <span class="metric-icon">📌</span>
                     </div>
                     <div class="metric-value">${formatCurrency(fixedCosts)}</div>
                     <div class="metric-subtitle">${fixedCount} transactions · ${formatPercent(fixedPercent)} of total</div>
+                    <div class="metric-definition">Constant costs (rent, insurance, salaries)</div>
+                    <div class="metric-target">Target: 30-35% of total costs</div>
                     <div class="metric-badge ${fixedPercent <= 35 ? 'badge-excellent' : fixedPercent <= 45 ? 'badge-good' : 'badge-warning'}">
                         ${fixedPercent <= 35 ? '🔥 Excellent' : fixedPercent <= 45 ? '✓ Good' : 'High'}
                     </div>
                 </div>
 
                 <div class="metric-card">
+                    <button class="info-button" onclick="alert('VARIABLE COSTS\\n\\nDefinition: Expenses that change based on business volume.\\n\\nExamples: Fuel, materials, hourly labor, equipment repairs, supplies.\\n\\nTarget: 65-70% of total costs\\n\\nBest Practice: These scale with revenue, so percentage should stay consistent.')">ℹ️</button>
                     <div class="metric-header">
                         <span class="metric-title">Variable Costs</span>
                         <span class="metric-icon">📊</span>
                     </div>
                     <div class="metric-value">${formatCurrency(variableCosts)}</div>
                     <div class="metric-subtitle">${variableCount} transactions · ${formatPercent(variablePercent)} of total</div>
+                    <div class="metric-definition">Volume-based costs (fuel, materials, hourly labor)</div>
+                    <div class="metric-target">Target: 65-70% of total costs</div>
                 </div>
 
                 <div class="metric-card ${needsCategorizing > 5 ? 'alert-warning' : ''}">
@@ -1004,6 +1198,7 @@
                     </div>
                     <div class="metric-value">${needsCategorizing}</div>
                     <div class="metric-subtitle">Uncategorized items</div>
+                    <div class="metric-definition">Transactions requiring category assignment</div>
                     <div class="metric-badge ${needsCategorizing === 0 ? 'badge-excellent' : needsCategorizing <= 5 ? 'badge-good' : 'badge-warning'}">
                         ${needsCategorizing === 0 ? '✓ All Clear' : needsCategorizing <= 5 ? 'Review Soon' : 'Action Needed'}
                     </div>
@@ -1017,7 +1212,6 @@
             let totalBillable = 0;
             let totalBudgeted = 0;
             let jobCount = 0;
-            let totalWorkdays = 0;
 
             costAnalysisData.forEach(job => {
                 const billable = parseFloat(getCostAnalysisValue(job, 'Billable Hours')) || 0;
@@ -1030,27 +1224,32 @@
                 }
             });
 
-            // Calculate workdays based on 8-hour standard day
-            totalWorkdays = totalBillable / STANDARD_WORKDAY_HOURS;
+            // Calculate efficiency and workdays
+            const totalWorkdays = totalBillable / STANDARD_WORKDAY_HOURS;
             const budgetedWorkdays = totalBudgeted / STANDARD_WORKDAY_HOURS;
-            
             const efficiencyRate = totalBudgeted > 0 ? (totalBillable / totalBudgeted) * 100 : 0;
             const avgBillable = jobCount > 0 ? totalBillable / jobCount : 0;
             const avgBudgeted = jobCount > 0 ? totalBudgeted / jobCount : 0;
-            
-            // Utilization rate: actual hours vs available hours
             const utilizationRate = budgetedWorkdays > 0 ? (totalWorkdays / budgetedWorkdays) * 100 : 0;
+            
+            // Calculate windshield time (non-billable time)
+            const totalAvailableHours = budgetedWorkdays * STANDARD_WORKDAY_HOURS;
+            const windshieldTime = totalAvailableHours - totalBillable;
+            const windshieldPercent = totalAvailableHours > 0 ? (windshieldTime / totalAvailableHours) * 100 : 0;
             
             const html = `
                 <div class="metric-card">
+                    <button class="info-button" onclick="alert('EFFICIENCY RATE\\n\\nFormula: (Billable Hours ÷ Budgeted Hours) × 100\\n\\nDefinition: How actual time compares to estimated time for jobs.\\n\\nTargets:\\n• 75-100% = Excellent (on/under budget)\\n• <75% = Over budget (inefficient)\\n• >100% = Under-estimated\\n\\nBest Practice: Aim for 90-95% to ensure profitability while maintaining quality.')">ℹ️</button>
                     <div class="metric-header">
                         <span class="metric-title">Efficiency Rate</span>
                         <span class="metric-icon">⚡</span>
                     </div>
                     <div class="metric-value">${formatPercent(efficiencyRate)}</div>
                     <div class="metric-subtitle">Billable vs Budgeted</div>
+                    <div class="metric-definition">Actual vs estimated job completion time</div>
+                    <div class="metric-target">Target: 75-100% (90-95% optimal)</div>
                     <div class="metric-badge ${efficiencyRate >= 75 && efficiencyRate <= 100 ? 'badge-excellent' : efficiencyRate < 75 ? 'badge-warning' : 'badge-good'}">
-                        ${efficiencyRate >= 75 && efficiencyRate <= 100 ? '💎 Excellent' : efficiencyRate < 75 ? 'Below Target' : 'Over Budget'}
+                        ${efficiencyRate >= 75 && efficiencyRate <= 100 ? '💎 Excellent' : efficiencyRate < 75 ? 'Over Budget' : 'Under-Estimated'}
                     </div>
                 </div>
 
@@ -1061,6 +1260,7 @@
                     </div>
                     <div class="metric-value">${totalBillable.toFixed(0)}h</div>
                     <div class="metric-subtitle">${totalWorkdays.toFixed(1)} workdays (8h/day)</div>
+                    <div class="metric-definition">Total productive hours across ${jobCount} jobs</div>
                 </div>
 
                 <div class="metric-card">
@@ -1070,17 +1270,36 @@
                     </div>
                     <div class="metric-value">${avgBillable.toFixed(1)}h</div>
                     <div class="metric-subtitle">Budgeted: ${avgBudgeted.toFixed(1)}h</div>
+                    <div class="metric-definition">Average time spent per job completion</div>
                 </div>
 
                 <div class="metric-card">
+                    <button class="info-button" onclick="alert('UTILIZATION RATE\\n\\nFormula: (Actual Workdays ÷ Budgeted Workdays) × 100\\n\\nDefinition: Percentage of available time being used productively.\\n\\nTargets:\\n• 85%+ = Excellent (highly utilized)\\n• 70-84% = Good\\n• <70% = Low (underutilized capacity)\\n\\nBest Practice: 80-90% allows for quality work and some flexibility.')">ℹ️</button>
                     <div class="metric-header">
                         <span class="metric-title">Utilization Rate</span>
                         <span class="metric-icon">📈</span>
                     </div>
                     <div class="metric-value">${formatPercent(utilizationRate)}</div>
                     <div class="metric-subtitle">${totalWorkdays.toFixed(1)} / ${budgetedWorkdays.toFixed(1)} days</div>
+                    <div class="metric-definition">Productive capacity being utilized</div>
+                    <div class="metric-target">Target: 85%+ (80-90% optimal)</div>
                     <div class="metric-badge ${utilizationRate >= 85 ? 'badge-excellent' : utilizationRate >= 70 ? 'badge-good' : 'badge-warning'}">
                         ${utilizationRate >= 85 ? '🔥 Excellent' : utilizationRate >= 70 ? '✓ Good' : 'Low'}
+                    </div>
+                </div>
+
+                <div class="metric-card ${windshieldPercent > 25 ? 'alert-warning' : ''}">
+                    <button class="info-button" onclick="alert('WINDSHIELD TIME\\n\\nFormula: (Available Hours - Billable Hours)\\n\\nDefinition: Non-billable time spent driving, loading, breaks, etc.\\n\\nIncludes: Travel between jobs, equipment loading/unloading, breaks, administrative tasks.\\n\\nTargets:\\n• <15% = Excellent\\n• 15-25% = Good\\n• >25% = High (route optimization needed)\\n\\nBest Practice: Optimize routes and schedule jobs geographically to minimize.')">ℹ️</button>
+                    <div class="metric-header">
+                        <span class="metric-title">Windshield Time</span>
+                        <span class="metric-icon">🚗</span>
+                    </div>
+                    <div class="metric-value">${windshieldTime.toFixed(0)}h</div>
+                    <div class="metric-subtitle">${formatPercent(windshieldPercent)} of available time</div>
+                    <div class="metric-definition">Non-billable: travel, loading, breaks</div>
+                    <div class="metric-target">Target: <15% (route optimization)</div>
+                    <div class="metric-badge ${windshieldPercent < 15 ? 'badge-excellent' : windshieldPercent <= 25 ? 'badge-good' : 'badge-warning'}">
+                        ${windshieldPercent < 15 ? '🔥 Excellent' : windshieldPercent <= 25 ? '✓ Good' : '⚠️ High'}
                     </div>
                 </div>
             `;
@@ -1249,10 +1468,16 @@
             let operationalIncome = 0;
             let nonOperationalIncome = 0;
             let totalExpenses = 0;
+            let fixedCosts = 0;
+            let variableCosts = 0;
+            
+            // Calculate totals by category
+            const expensesByCategory = {};
             
             transactionsData.forEach(txn => {
                 const type = getTransactionValue(txn, 'Type').toLowerCase();
                 const category = getTransactionValue(txn, 'Category');
+                const costType = getTransactionValue(txn, 'Cost Type').toLowerCase();
                 const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
                 
                 if (type === 'income') {
@@ -1263,13 +1488,33 @@
                         operationalIncome += amount;
                     }
                 }
-                if (type === 'expense') totalExpenses += amount;
+                if (type === 'expense') {
+                    totalExpenses += amount;
+                    
+                    if (costType === 'fixed') fixedCosts += amount;
+                    if (costType === 'variable') variableCosts += amount;
+                    
+                    if (!expensesByCategory[category]) {
+                        expensesByCategory[category] = 0;
+                    }
+                    expensesByCategory[category] += amount;
+                }
             });
             
-            const netProfit = totalIncome - totalExpenses;
-            const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+            // Calculate efficiency metrics
+            let totalBillable = 0;
+            let totalBudgeted = 0;
+            let jobCount = costAnalysisData.length;
             
-            // Get Bank Balance and Last Checked
+            costAnalysisData.forEach(job => {
+                totalBillable += parseFloat(getCostAnalysisValue(job, 'Billable Hours')) || 0;
+                totalBudgeted += parseFloat(getCostAnalysisValue(job, 'Budgeted Hours')) || 0;
+            });
+            
+            const efficiencyRate = totalBudgeted > 0 ? (totalBillable / totalBudgeted) * 100 : 0;
+            const totalWorkdays = totalBillable / STANDARD_WORKDAY_HOURS;
+            
+            // Get Bank Balance
             let bankBalance = 0;
             let lastChecked = 'N/A';
             if (allTransactionsData.length > 1) {
@@ -1277,61 +1522,112 @@
                 lastChecked = getTransactionValue(allTransactionsData[1], 'Last Checked') || 'N/A';
             }
             
+            const netProfit = totalIncome - totalExpenses;
+            const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+            
+            // Sort expenses by amount
+            const topExpenses = Object.entries(expensesByCategory)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
             const html = `
                 <div style="text-align:center;margin-bottom:30px;">
-                    <h1 style="color:var(--primary-green);">WS Lawn Care Services</h1>
-                    <p style="color:var(--text-light);">Balance Sheet</p>
-                    <p style="color:var(--text-light);">As of ${new Date().toLocaleDateString()}</p>
+                    <h1 style="color:var(--primary-green);">WS Lawn Care Services, LLC</h1>
+                    <p style="color:var(--text-light); font-size:1.2em;">Balance Sheet & Performance Report</p>
+                    <p style="color:var(--text-light);">Period: ${currentView === 'ytd' ? 'Year to Date 2025' : currentView === 'monthly' ? 'Monthly' : 'Yearly'}</p>
+                    <p style="color:var(--text-light);">Generated: ${new Date().toLocaleString()}</p>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px;">
-                    <div>
-                        <h3 style="color:var(--primary-green);border-bottom:2px solid var(--primary-green);padding-bottom:10px;">Revenue</h3>
-                        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #e9ecef;">
+                <div class="highlight-box">
+                    <h2 style="color:var(--primary-green);text-align:center;margin-bottom:20px;">Key Performance Indicators</h2>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Net Profit</div>
+                            <div class="stat-value" style="color:${netProfit > 0 ? 'var(--success)' : 'var(--danger)'};">${formatCurrency(netProfit)}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Profit Margin</div>
+                            <div class="stat-value">${formatPercent(profitMargin)}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Bank Balance</div>
+                            <div class="stat-value">${formatCurrency(bankBalance)}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Efficiency Rate</div>
+                            <div class="stat-value">${formatPercent(efficiencyRate)}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Jobs Completed</div>
+                            <div class="stat-value">${jobCount}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Workdays</div>
+                            <div class="stat-value">${totalWorkdays.toFixed(1)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin:30px 0;">
+                    <div class="balance-sheet-section">
+                        <h3>Revenue Breakdown</h3>
+                        <div class="balance-item">
                             <span>Operational Income</span>
                             <strong>${formatCurrency(operationalIncome)}</strong>
                         </div>
-                        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #e9ecef;">
+                        <div class="balance-item">
                             <span>Non-Operational Income</span>
                             <strong>${formatCurrency(nonOperationalIncome)}</strong>
                         </div>
-                        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:2px solid var(--primary-green);font-weight:700;">
+                        <div class="balance-item total">
                             <span>Total Income</span>
                             <strong>${formatCurrency(totalIncome)}</strong>
                         </div>
                     </div>
 
-                    <div>
-                        <h3 style="color:var(--primary-green);border-bottom:2px solid var(--primary-green);padding-bottom:10px;">Expenses</h3>
-                        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:2px solid var(--primary-green);font-weight:700;">
+                    <div class="balance-sheet-section">
+                        <h3>Expense Breakdown</h3>
+                        <div class="balance-item">
+                            <span>Fixed Costs</span>
+                            <strong>${formatCurrency(fixedCosts)}</strong>
+                        </div>
+                        <div class="balance-item">
+                            <span>Variable Costs</span>
+                            <strong>${formatCurrency(variableCosts)}</strong>
+                        </div>
+                        <div class="balance-item total">
                             <span>Total Expenses</span>
                             <strong>${formatCurrency(totalExpenses)}</strong>
                         </div>
                     </div>
                 </div>
 
-                <div style="background:#f8f9fa;padding:30px;border-radius:12px;">
-                    <h3 style="text-align:center;color:var(--primary-green);margin-bottom:20px;">Financial Summary</h3>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
-                        <div style="text-align:center;background:white;padding:20px;border-radius:8px;">
-                            <div style="font-size:0.9em;color:var(--text-light);margin-bottom:10px;">NET PROFIT</div>
-                            <div style="font-size:2em;font-weight:700;color:${netProfit > 0 ? 'var(--success)' : 'var(--danger)'};">${formatCurrency(netProfit)}</div>
+                <div class="balance-sheet-section">
+                    <h3>Top 10 Expense Categories</h3>
+                    ${topExpenses.map(([category, amount]) => `
+                        <div class="balance-item">
+                            <span>${category}</span>
+                            <strong>${formatCurrency(amount)}</strong>
                         </div>
-                        <div style="text-align:center;background:white;padding:20px;border-radius:8px;">
-                            <div style="font-size:0.9em;color:var(--text-light);margin-bottom:10px;">PROFIT MARGIN</div>
-                            <div style="font-size:2em;font-weight:700;">${formatPercent(profitMargin)}</div>
-                        </div>
-                        <div style="text-align:center;background:white;padding:20px;border-radius:8px;">
-                            <div style="font-size:0.9em;color:var(--text-light);margin-bottom:10px;">BANK BALANCE</div>
-                            <div style="font-size:2em;font-weight:700;">${formatCurrency(bankBalance)}</div>
-                            <div style="font-size:0.8em;color:var(--text-light);margin-top:5px;">Last: ${lastChecked}</div>
-                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="highlight-box" style="margin-top:30px;">
+                    <h3 style="color:var(--primary-green);margin-bottom:15px;">Financial Health Summary</h3>
+                    <div style="line-height:2;">
+                        <p><strong>Bank Balance:</strong> ${formatCurrency(bankBalance)} (Last Checked: ${lastChecked})</p>
+                        <p><strong>Net Profit:</strong> ${formatCurrency(netProfit)} (${formatPercent(profitMargin)} margin)</p>
+                        <p><strong>Operational Efficiency:</strong> ${formatPercent(efficiencyRate)} billable vs budgeted</p>
+                        <p><strong>Total Workdays:</strong> ${totalWorkdays.toFixed(1)} days (${totalBillable.toFixed(0)} hours)</p>
+                        <p><strong>Jobs Completed:</strong> ${jobCount} jobs in period</p>
+                        <p><strong>Cost Structure:</strong> ${formatPercent(fixedCosts / totalExpenses * 100)} Fixed, ${formatPercent(variableCosts / totalExpenses * 100)} Variable</p>
                     </div>
                 </div>
 
                 <div style="margin-top:40px;text-align:center;color:var(--text-light);border-top:2px solid #e9ecef;padding-top:20px;">
                     <p><strong>WS Lawn Care Services, LLC</strong></p>
                     <p>"You grow it, we mow it!" • Jesus First Before Profits</p>
+                    <p style="margin-top:10px;font-size:0.9em;">This report is for internal use only and contains confidential business information.</p>
                 </div>
             `;
             
@@ -1349,12 +1645,13 @@
             }
         }
 
-        console.log('🚀 WS Lawn Care Dashboard - FINAL VERSION');
-        console.log('✅ Transactions: Verified column mapping');
-        console.log('✅ Cost Analysis: Verified column mapping');
-        console.log('✅ Operational/Non-Operational revenue split');
-        console.log('✅ Last Checked timestamp in Bank Balance');
-        console.log('✅ 8-hour workday calculations');
+        console.log('🚀 WS Lawn Care Dashboard - ENHANCED VERSION');
+        console.log('✅ Bank Balance: Column N Row 2');
+        console.log('✅ Last Checked: Column M Row 2');
+        console.log('✅ Metric definitions with clickable info buttons');
+        console.log('✅ Windshield time calculation');
+        console.log('✅ Auto-refresh intervals');
+        console.log('✅ Enhanced balance sheet');
         initializePickers();
         loadData();
     </script>
