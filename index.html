@@ -449,7 +449,21 @@
         .refresh-indicator.active { display: block; }
         
         @media print {
-            .dashboard-header, .btn, .modal, .info-button { display: none !important; }
+            body * { visibility: hidden; }
+            #balanceSheetModal, #balanceSheetModal * { visibility: visible; }
+            #balanceSheetModal { 
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+            }
+            .modal-content {
+                box-shadow: none;
+                max-width: 100%;
+                max-height: none;
+            }
+            .btn, .close-modal { display: none !important; }
         }
         
         @media (max-width: 768px) {
@@ -894,6 +908,35 @@
             document.getElementById('lastUpdate').textContent = `Last updated: ${new Date().toLocaleString()}`;
         }
 
+        function getCurrentPeriodLabel() {
+            const view = document.getElementById('viewType').value;
+            if (view === 'ytd') {
+                return 'Year to Date 2025';
+            } else if (view === 'monthly') {
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                   'July', 'August', 'September', 'October', 'November', 'December'];
+                const month = parseInt(document.getElementById('monthSelect').value);
+                const year = document.getElementById('yearSelect').value;
+                return `${monthNames[month]} ${year}`;
+            } else {
+                return document.getElementById('yearSelect').value;
+            }
+        }
+
+        function getCurrentPeriodShortLabel() {
+            const view = document.getElementById('viewType').value;
+            if (view === 'ytd') {
+                return 'YTD';
+            } else if (view === 'monthly') {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const month = parseInt(document.getElementById('monthSelect').value);
+                return monthNames[month];
+            } else {
+                return document.getElementById('yearSelect').value;
+            }
+        }
+
         function displayFinancialOverview() {
             const view = document.getElementById('viewType').value;
             
@@ -965,13 +1008,13 @@
             const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
             const alertClass = profitMargin < 10 ? 'alert-danger' : profitMargin < 15 ? 'alert-warning' : '';
             
-            const viewLabel = view === 'ytd' ? 'YTD' : view === 'monthly' ? 'This Month' : 'This Year';
+            const periodLabel = getCurrentPeriodShortLabel();
             
             const html = `
                 <div class="metric-card">
                     <button class="info-button" onclick="showInfoModal('Operational Revenue', '<strong>Definition:</strong> Revenue generated from core business operations (sales and services).<br><br><strong>Excludes:</strong> Interest, investments, grants, donations, and other non-operating income.<br><br><strong>Target:</strong> Should be 90%+ of total income for healthy business focus.')">ℹ️</button>
                     <div class="metric-header">
-                        <span class="metric-title">Operational Revenue ${viewLabel}</span>
+                        <span class="metric-title">Operational Revenue ${periodLabel}</span>
                         <span class="metric-icon">💼</span>
                     </div>
                     <div class="metric-value">${formatCurrency(operationalIncome)}</div>
@@ -983,7 +1026,7 @@
                 <div class="metric-card">
                     <button class="info-button" onclick="showInfoModal('Non-Operational Revenue', '<strong>Definition:</strong> Income from sources outside core business operations.<br><br><strong>Includes:</strong> Interest income, investment returns, grants, donations, miscellaneous income.<br><br><strong>Target:</strong> Should be <10% of total income for operational focus.')">ℹ️</button>
                     <div class="metric-header">
-                        <span class="metric-title">Non-Operational Revenue</span>
+                        <span class="metric-title">Non-Operational Revenue ${periodLabel}</span>
                         <span class="metric-icon">📈</span>
                     </div>
                     <div class="metric-value">${formatCurrency(nonOperationalIncome)}</div>
@@ -993,7 +1036,7 @@
 
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-title">Total Income ${viewLabel}</span>
+                        <span class="metric-title">Total Income ${periodLabel}</span>
                         <span class="metric-icon">💰</span>
                     </div>
                     <div class="metric-value">${formatCurrency(totalIncome)}</div>
@@ -1002,7 +1045,7 @@
 
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-title">Total Expenses ${viewLabel}</span>
+                        <span class="metric-title">Total Expenses ${periodLabel}</span>
                         <span class="metric-icon">💳</span>
                     </div>
                     <div class="metric-value">${formatCurrency(totalExpenses)}</div>
@@ -1012,7 +1055,7 @@
                 <div class="metric-card ${alertClass}">
                     <button class="info-button" onclick="showInfoModal('Net Profit Margin', '<strong>Formula:</strong> (Net Profit ÷ Total Income) × 100<br><br><strong>Definition:</strong> Percentage of revenue remaining after all expenses.<br><br><strong>Targets:</strong><br>• 15%+ = Healthy (green)<br>• 10-15% = Low (yellow)<br>• &lt;10% = Critical (red)<br><br><strong>Industry Standard:</strong> 15-25% for lawn care services')">ℹ️</button>
                     <div class="metric-header">
-                        <span class="metric-title">Net Profit ${viewLabel}</span>
+                        <span class="metric-title">Net Profit ${periodLabel}</span>
                         <span class="metric-icon">💡</span>
                     </div>
                     <div class="metric-value">${formatCurrency(netProfit)}</div>
@@ -1328,6 +1371,7 @@
         }
 
         function generateBalanceSheet() {
+            const view = document.getElementById('viewType').value;
             let totalIncome = 0;
             let operationalIncome = 0;
             let nonOperationalIncome = 0;
@@ -1337,32 +1381,85 @@
             
             const expensesByCategory = {};
             
-            transactionsData.forEach(txn => {
-                const type = getTransactionValue(txn, 'Type').toLowerCase();
-                const category = getTransactionValue(txn, 'Category');
-                const costType = getTransactionValue(txn, 'Cost Type').toLowerCase();
-                const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
+            if (view === 'ytd') {
+                // Use budget totals for YTD
+                totalIncome = YTD_INCOME_BUDGET;
+                totalExpenses = YTD_EXPENSES_BUDGET;
                 
-                if (type === 'income') {
-                    totalIncome += amount;
-                    if (NON_OPERATIONAL_CATEGORIES.includes(category)) {
-                        nonOperationalIncome += amount;
-                    } else {
-                        operationalIncome += amount;
-                    }
-                }
-                if (type === 'expense') {
-                    totalExpenses += amount;
+                // Calculate operational vs non-operational from transactions
+                transactionsData.forEach(txn => {
+                    const type = getTransactionValue(txn, 'Type').toLowerCase();
+                    const category = getTransactionValue(txn, 'Category');
+                    const costType = getTransactionValue(txn, 'Cost Type').toLowerCase();
+                    const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
                     
-                    if (costType === 'fixed') fixedCosts += amount;
-                    if (costType === 'variable') variableCosts += amount;
-                    
-                    if (!expensesByCategory[category]) {
-                        expensesByCategory[category] = 0;
+                    if (type === 'income') {
+                        if (NON_OPERATIONAL_CATEGORIES.includes(category)) {
+                            nonOperationalIncome += amount;
+                        } else {
+                            operationalIncome += amount;
+                        }
                     }
-                    expensesByCategory[category] += amount;
+                    if (type === 'expense') {
+                        if (costType === 'fixed') fixedCosts += amount;
+                        if (costType === 'variable') variableCosts += amount;
+                        
+                        if (!expensesByCategory[category]) {
+                            expensesByCategory[category] = 0;
+                        }
+                        expensesByCategory[category] += amount;
+                    }
+                });
+                
+                // Scale operational/non-operational to match budget totals
+                if (operationalIncome + nonOperationalIncome > 0) {
+                    const ratio = totalIncome / (operationalIncome + nonOperationalIncome);
+                    operationalIncome *= ratio;
+                    nonOperationalIncome *= ratio;
+                } else {
+                    operationalIncome = totalIncome;
                 }
-            });
+                
+                // Scale expenses proportionally
+                if (fixedCosts + variableCosts > 0) {
+                    const expenseRatio = totalExpenses / (fixedCosts + variableCosts);
+                    fixedCosts *= expenseRatio;
+                    variableCosts *= expenseRatio;
+                    
+                    // Scale category expenses
+                    Object.keys(expensesByCategory).forEach(cat => {
+                        expensesByCategory[cat] *= expenseRatio;
+                    });
+                }
+            } else {
+                // Use actual transaction data for monthly/yearly
+                transactionsData.forEach(txn => {
+                    const type = getTransactionValue(txn, 'Type').toLowerCase();
+                    const category = getTransactionValue(txn, 'Category');
+                    const costType = getTransactionValue(txn, 'Cost Type').toLowerCase();
+                    const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
+                    
+                    if (type === 'income') {
+                        totalIncome += amount;
+                        if (NON_OPERATIONAL_CATEGORIES.includes(category)) {
+                            nonOperationalIncome += amount;
+                        } else {
+                            operationalIncome += amount;
+                        }
+                    }
+                    if (type === 'expense') {
+                        totalExpenses += amount;
+                        
+                        if (costType === 'fixed') fixedCosts += amount;
+                        if (costType === 'variable') variableCosts += amount;
+                        
+                        if (!expensesByCategory[category]) {
+                            expensesByCategory[category] = 0;
+                        }
+                        expensesByCategory[category] += amount;
+                    }
+                });
+            }
             
             let bankBalance = 0;
             let lastChecked = 'N/A';
@@ -1382,7 +1479,7 @@
                 <div style="text-align:center;margin-bottom:30px;">
                     <h1 style="color:var(--primary-green);">WS Lawn Care Services, LLC</h1>
                     <p style="color:var(--text-light); font-size:1.2em;">Balance Sheet & Financial Report</p>
-                    <p style="color:var(--text-light);">Period: ${currentView === 'ytd' ? 'Year to Date 2025' : currentView === 'monthly' ? 'Monthly' : 'Yearly'}</p>
+                    <p style="color:var(--text-light);">Period: ${getCurrentPeriodLabel()}</p>
                     <p style="color:var(--text-light);">Generated: ${new Date().toLocaleString()}</p>
                 </div>
 
