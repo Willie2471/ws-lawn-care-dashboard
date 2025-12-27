@@ -1156,6 +1156,8 @@
         }
 
         function displayCostTypeBreakdown() {
+            const periodLabel = getCurrentPeriodShortLabel();
+            
             let fixedCosts = 0;
             let variableCosts = 0;
             let fixedCount = 0;
@@ -1191,7 +1193,7 @@
                 <div class="metric-card">
                     <button class="info-button" onclick="showInfoModal('Fixed Costs', '<strong>Definition:</strong> Expenses that remain constant regardless of business activity.<br><br><strong>Examples:</strong> Rent, insurance, salaries, equipment leases, subscriptions.<br><br><strong>Target:</strong> 30-35% of total costs<br><br><strong>Best Practice:</strong> Keep fixed costs low for flexibility during slow seasons.')">ℹ️</button>
                     <div class="metric-header">
-                        <span class="metric-title">Fixed Costs</span>
+                        <span class="metric-title">Fixed Costs ${periodLabel}</span>
                         <span class="metric-icon">📌</span>
                     </div>
                     <div class="metric-value">${formatCurrency(fixedCosts)}</div>
@@ -1206,7 +1208,7 @@
                 <div class="metric-card">
                     <button class="info-button" onclick="showInfoModal('Variable Costs', '<strong>Definition:</strong> Expenses that change based on business volume.<br><br><strong>Examples:</strong> Fuel, materials, hourly labor, equipment repairs, supplies.<br><br><strong>Target:</strong> 65-70% of total costs<br><br><strong>Best Practice:</strong> These scale with revenue, so percentage should stay consistent.')">ℹ️</button>
                     <div class="metric-header">
-                        <span class="metric-title">Variable Costs</span>
+                        <span class="metric-title">Variable Costs ${periodLabel}</span>
                         <span class="metric-icon">📊</span>
                     </div>
                     <div class="metric-value">${formatCurrency(variableCosts)}</div>
