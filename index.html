@@ -438,7 +438,7 @@
             bottom: 20px;
             right: 20px;
             background: var(--info);
-            color: white;
+            color: white !important;
             padding: 10px 20px;
             border-radius: 20px;
             font-size: 0.9em;
@@ -447,6 +447,11 @@
         }
         
         .refresh-indicator.active { display: block; }
+        
+        .refresh-indicator, 
+        .refresh-indicator * {
+            color: white !important;
+        }
         
         @media print {
             /* Hide everything except the balance sheet modal */
@@ -690,6 +695,27 @@
         <div class="section">
             <div class="section-title">💳 Category Spending Trends</div>
             <div id="lastUpdate" style="margin-bottom:15px;color:var(--text-light);"></div>
+            
+            <div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;">
+                <div class="control-group">
+                    <span class="control-label">Cost Type:</span>
+                    <select id="categoryFilterCostType" onchange="filterAndDisplayCategories()">
+                        <option value="all">All</option>
+                        <option value="fixed">Fixed</option>
+                        <option value="variable">Variable</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <span class="control-label">Type:</span>
+                    <select id="categoryFilterType" onchange="filterAndDisplayCategories()">
+                        <option value="all">All</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+            </div>
+            
             <div class="table-container">
                 <table>
                     <thead>
@@ -1058,15 +1084,6 @@
                 }
             });
             
-            let bankBalance = 0;
-            let lastChecked = 'N/A';
-            
-            if (allTransactionsData.length > 1) {
-                const row2 = allTransactionsData[0];
-                bankBalance = parseNumber(getTransactionValue(row2, 'Bank Balance'));
-                lastChecked = getTransactionValue(row2, 'Last Checked') || 'N/A';
-            }
-            
             const netProfit = totalIncome - totalExpenses;
             const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
             const alertClass = profitMargin < 10 ? 'alert-danger' : profitMargin < 15 ? 'alert-warning' : '';
@@ -1127,25 +1144,6 @@
                         ${profitMargin >= 15 ? '✅ Healthy' : profitMargin >= 10 ? '⚠️ Low' : '🚨 Critical'}
                     </div>
                 </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-title">Bank Balance</span>
-                        <span class="metric-icon">🏦</span>
-                    </div>
-                    <div class="metric-value">${formatCurrency(bankBalance)}</div>
-                    <div class="metric-subtitle">Last Checked: ${lastChecked}</div>
-                    <div class="metric-definition">Current Account Balance</div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-title">Total Transactions</span>
-                        <span class="metric-icon">📋</span>
-                    </div>
-                    <div class="metric-value">${transactionsData.length}</div>
-                    <div class="metric-subtitle">In selected period</div>
-                </div>
             `;
             
             document.getElementById('financialMetrics').innerHTML = html;
@@ -1162,17 +1160,11 @@
             let variableCosts = 0;
             let fixedCount = 0;
             let variableCount = 0;
-            let needsCategorizing = 0;
             
             transactionsData.forEach(txn => {
                 const costType = getTransactionValue(txn, 'Cost Type').toLowerCase();
                 const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
                 const type = getTransactionValue(txn, 'Type').toLowerCase();
-                const needsCat = parseNumber(getTransactionValue(txn, 'Need Categorizing'));
-                
-                if (needsCat > 0) {
-                    needsCategorizing += needsCat;
-                }
                 
                 if (type === 'expense') {
                     if (costType === 'fixed') {
@@ -1215,19 +1207,6 @@
                     <div class="metric-subtitle">${variableCount} transactions · ${formatPercent(variablePercent)} of total</div>
                     <div class="metric-definition">Volume-based costs (fuel, materials, hourly labor)</div>
                     <div class="metric-target">Target: 65-70% of total costs</div>
-                </div>
-
-                <div class="metric-card ${needsCategorizing > 5 ? 'alert-warning' : ''}">
-                    <div class="metric-header">
-                        <span class="metric-title">Needs Categorizing</span>
-                        <span class="metric-icon">⚠️</span>
-                    </div>
-                    <div class="metric-value">${needsCategorizing}</div>
-                    <div class="metric-subtitle">Uncategorized items</div>
-                    <div class="metric-definition">Transactions requiring category assignment</div>
-                    <div class="metric-badge ${needsCategorizing === 0 ? 'badge-excellent' : needsCategorizing <= 5 ? 'badge-good' : 'badge-warning'}">
-                        ${needsCategorizing === 0 ? '✓ All Clear' : needsCategorizing <= 5 ? 'Review Soon' : 'Action Needed'}
-                    </div>
                 </div>
             `;
             
@@ -1392,6 +1371,13 @@
         }
 
         function displayCategorySpending() {
+            filterAndDisplayCategories();
+        }
+        
+        function filterAndDisplayCategories() {
+            const costTypeFilter = document.getElementById('categoryFilterCostType').value.toLowerCase();
+            const typeFilter = document.getElementById('categoryFilterType').value.toLowerCase();
+            
             const categories = {};
             
             transactionsData.forEach(txn => {
@@ -1400,7 +1386,16 @@
                 const costType = getTransactionValue(txn, 'Cost Type') || 'Unknown';
                 const amount = Math.abs(parseNumber(getTransactionValue(txn, 'Amount')));
                 
-                const key = `${category}-${costType}`;
+                // Apply filters
+                if (costTypeFilter !== 'all' && costType.toLowerCase() !== costTypeFilter) {
+                    return; // Skip this transaction
+                }
+                
+                if (typeFilter !== 'all' && type.toLowerCase() !== typeFilter) {
+                    return; // Skip this transaction
+                }
+                
+                const key = `${category}-${costType}-${type}`;
                 if (!categories[key]) {
                     categories[key] = { 
                         category, 
