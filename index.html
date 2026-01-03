@@ -693,7 +693,10 @@
 
         <!-- Section 5: Category Spending -->
         <div class="section">
-            <div class="section-title">💳 Category Spending Trends</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+                <div class="section-title">💳 Category Spending Trends</div>
+                <div id="categoryViewingPeriod" style="background:var(--primary-green);color:white;padding:8px 16px;border-radius:20px;font-size:0.9em;font-weight:600;"></div>
+            </div>
             <div id="lastUpdate" style="margin-bottom:15px;color:var(--text-light);"></div>
             
             <div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;">
@@ -1371,10 +1374,15 @@
         }
 
         function displayCategorySpending() {
+            // Update viewing period indicator
+            document.getElementById('categoryViewingPeriod').textContent = `Viewing: ${getCurrentPeriodLabel()}`;
             filterAndDisplayCategories();
         }
         
         function filterAndDisplayCategories() {
+            // Update viewing period indicator
+            document.getElementById('categoryViewingPeriod').textContent = `Viewing: ${getCurrentPeriodLabel()}`;
+            
             const costTypeFilter = document.getElementById('categoryFilterCostType').value.toLowerCase();
             const typeFilter = document.getElementById('categoryFilterType').value.toLowerCase();
             
